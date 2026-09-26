@@ -1,0 +1,3591 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>四天王を倒して楽園への扉をひらけ！ 〜高2ソウタン 9/30 DX進行クエスト〜</title>
+  <style>
+    /* ==========================================================================
+       DRAGON QUEST THEME DESIGN TOKENS & SYSTEM
+       kawase-cognitive-visual-design 準拠 / CUD対応 / 8bitレトロRPGテイスト
+       ========================================================================== */
+    :root {
+      --dq-bg: #000000;
+      --dq-window-bg: #000022;
+      --dq-border: #ffffff;
+      --dq-text: #ffffff;
+      --dq-gold: #f1c40f;
+      --dq-yellow: #ffeb3b;
+      --dq-blue: #0984e3;
+      --dq-green: #2ecc71;
+      --dq-red: #e74c3c;
+      --dq-purple: #9b59b6;
+      --dq-gray: #7f8c8d;
+      --dq-dark-gray: #2d3436;
+      --font-dq: "Hiragino Sans", "Noto Sans JP", "BIZ UDPGothic", -apple-system, sans-serif;
+      --window-border: 4px solid var(--dq-border);
+      --window-radius: 8px;
+      --window-shadow: 0 0 0 2px #000, 0 4px 12px rgba(0,0,0,0.8);
+      --motion-normal: 320ms;
+      --command-safe-height: 88px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: var(--dq-bg);
+      color: var(--dq-text);
+      font-family: var(--font-dq);
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding-bottom: calc(var(--command-safe-height) + env(safe-area-inset-bottom));
+    }
+
+    /* レトロ二重枠（ドラクエ風ウィンドウ） */
+    .dq-box {
+      background-color: var(--dq-window-bg);
+      border: 3px solid var(--dq-border);
+      outline: 3px solid #000;
+      border-radius: var(--window-radius);
+      box-shadow: inset 0 0 0 2px var(--dq-border), 0 4px 12px rgba(0,0,0,0.8);
+      padding: 16px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .dq-box-header {
+      color: var(--dq-gold);
+      font-size: 1.15rem;
+      font-weight: bold;
+      border-bottom: 2px dashed var(--dq-border);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* ==========================================================================
+       ORIGINAL 8BIT JRPG ASSET & MOTION LAYER (SVG PIXEL ART)
+       ========================================================================== */
+    .pixel-symbols {
+      position: absolute;
+      width: 0;
+      height: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+
+    .pixel-art,
+    .boss-sprite,
+    .party-sprite,
+    .weapon-icon {
+      shape-rendering: crispEdges;
+      image-rendering: pixelated;
+    }
+
+    .boss-sprite {
+      width: 96px;
+      height: 96px;
+      filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.65));
+      transition: transform 0.2s;
+    }
+
+    .party-sprite {
+      width: 144px;
+      height: 96px;
+      filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.65));
+    }
+
+    .weapon-icon {
+      width: 48px;
+      height: 48px;
+    }
+
+    /* アニメーション */
+    .mist-face-a { animation: mist-face-a 2.4s steps(2, end) infinite; }
+    .mist-face-b { opacity: 0; animation: mist-face-b 2.4s steps(2, end) infinite; }
+    .wicked-eye { animation: eye-glimmer 2.8s steps(2, end) infinite; }
+    .turning-page {
+      transform-box: fill-box;
+      transform-origin: left bottom;
+      animation: turn-page 2.6s steps(3, end) infinite;
+    }
+
+    @keyframes mist-face-a {
+      0%, 45% { opacity: 1; }
+      46%, 70% { opacity: 0.15; }
+      71%, 100% { opacity: 0.8; }
+    }
+    @keyframes mist-face-b {
+      0%, 45% { opacity: 0; }
+      46%, 70% { opacity: 0.85; }
+      71%, 100% { opacity: 0.15; }
+    }
+    @keyframes eye-glimmer {
+      0%, 80%, 100% { opacity: 1; }
+      84%, 92% { opacity: 0.3; }
+    }
+    @keyframes turn-page {
+      0%, 55% { transform: translate(0, 0) scaleX(1); }
+      70% { transform: translate(-2px, 1px) scaleX(0.55); }
+      85%, 100% { transform: translate(-4px, 2px) scaleX(0.2); }
+    }
+
+    /* ==========================================================================
+       STICKY STATUS HEADER (HP / MP / EXP / TASK BANNER)
+       ========================================================================== */
+    .status-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background-color: #050515;
+      border-bottom: 3px solid var(--dq-border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.9);
+      padding: 10px 16px;
+    }
+
+    .status-grid {
+      max-width: 1040px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      align-items: center;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+    }
+
+    .status-label {
+      font-weight: bold;
+      color: var(--dq-gold);
+      min-width: 44px;
+    }
+
+    .gauge-container {
+      flex: 1;
+      height: 20px;
+      background: var(--dq-dark-gray);
+      border: 2px solid var(--dq-border);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .gauge-fill {
+      height: 100%;
+      transition: width 0.3s ease, background-color 0.3s ease;
+    }
+
+    .gauge-hp { background: var(--dq-green); }
+    .gauge-hp.is-low { background: var(--dq-yellow); } /* 20%以下黄色警告のみ */
+    .gauge-mp { background: var(--dq-blue); }
+    .gauge-exp { background: var(--dq-gold); }
+
+    .gauge-text {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      font-size: 0.75rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      text-shadow: 1px 1px 2px #000;
+    }
+
+    .sound-toggle {
+      background: #111;
+      color: #fff;
+      border: 2px solid var(--dq-border);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .sound-toggle:hover { background: #333; }
+
+    /* いますることバナー (F型走査の先頭、認知負荷抑制) */
+    .task-banner {
+      background: #1a1a3a;
+      border: 2px solid var(--dq-gold);
+      border-radius: 4px;
+      padding: 6px 14px;
+      margin-top: 8px;
+      font-size: 0.95rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 1040px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .task-banner .task-arrow {
+      color: var(--dq-gold);
+      font-weight: bold;
+      animation: pulse 1s infinite alternate;
+    }
+
+    @keyframes pulse {
+      from { opacity: 0.6; transform: translateX(0); }
+      to { opacity: 1; transform: translateX(4px); }
+    }
+
+    /* ==========================================================================
+       MAIN CONTENT CONTAINER & TAB PANES
+       ========================================================================== */
+    .main-container {
+      max-width: 1040px;
+      width: 100%;
+      margin: 16px auto;
+      padding: 0 16px;
+      flex: 1;
+    }
+
+    .stage-nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .stage-tab-btn {
+      flex: 1;
+      min-width: 150px;
+      background: #0d1117;
+      color: #aaa;
+      border: 2px solid #555;
+      border-radius: 6px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .stage-tab-btn:hover {
+      color: #fff;
+      border-color: var(--dq-gold);
+    }
+
+    .stage-tab-btn.active {
+      background: #111e38;
+      color: var(--dq-gold);
+      border: 3px solid var(--dq-gold);
+      box-shadow: 0 0 10px rgba(241, 196, 15, 0.4);
+    }
+
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==========================================================================
+       VIDEO AREA (16:9 RESPONSIVE FRAME) - 常に各タブの一番上に配置
+       ========================================================================== */
+    .video-wrapper {
+      margin-bottom: 20px;
+    }
+
+    .video-frame {
+      aspect-ratio: 16 / 9;
+      width: 100%;
+      max-width: 760px;
+      background: #000;
+      border: 3px solid var(--dq-border);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      margin: 0 auto;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.8);
+    }
+
+    .video-frame iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .video-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #aaa;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .video-placeholder-icon {
+      font-size: 3.5rem;
+      color: var(--dq-gold);
+    }
+
+    .video-summary {
+      background: #121824;
+      border-left: 4px solid var(--dq-gold);
+      padding: 10px 14px;
+      margin-top: 10px;
+      font-size: 0.92rem;
+      border-radius: 0 4px 4px 0;
+      max-width: 760px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* ==========================================================================
+       STAGE 0: OPENING / INTRO
+       ========================================================================== */
+    .intro-grid {
+      display: grid;
+      grid-template-columns: 1fr 144px;
+      gap: 16px;
+      align-items: center;
+    }
+    @media (max-width: 640px) {
+      .intro-grid { grid-template-columns: 1fr; }
+      .party-sprite { margin: 0 auto; }
+    }
+
+    /* ==========================================================================
+       STAGE 1: 3 WEAPONS (MODEL PLAN A / B / C)
+       ========================================================================== */
+    .weapons-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .weapon-card {
+      background: #090e1a;
+      border: 2px solid var(--dq-border);
+      border-radius: 6px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+
+    .weapon-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 8px;
+    }
+
+    .weapon-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--dq-yellow);
+    }
+
+    .weapon-desc {
+      font-size: 0.9rem;
+      color: #ddd;
+    }
+
+    .weapon-details {
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 0.85rem;
+    }
+
+    /* ==========================================================================
+       STAGE 2: FOUR KINGS BATTLE & RUBRIC JUDGEMENT
+       ========================================================================== */
+    .boss-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .boss-select-card {
+      background: #090e1a;
+      border: 2px solid #555;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .boss-select-card:hover { border-color: var(--dq-gold); transform: translateY(-2px); }
+    .boss-select-card.active {
+      border: 3px solid var(--dq-gold);
+      background: #162444;
+      box-shadow: 0 0 12px rgba(241, 196, 15, 0.4);
+    }
+    .boss-select-card.is-cleared { border-color: var(--dq-green); }
+
+    .boss-battle-arena {
+      background: #040814;
+      border: 3px solid var(--dq-border);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+
+    .boss-arena-header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      border-bottom: 2px dashed #444;
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+
+    .boss-info {
+      flex: 1;
+    }
+
+    .boss-title-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .boss-title {
+      font-size: 1.3rem;
+      font-weight: bold;
+      color: var(--dq-gold);
+    }
+
+    /* 判定バッジ */
+    .badge {
+      font-size: 0.85rem;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 4px;
+      border: 1px solid;
+    }
+    .badge-before { color: #ccc; border-color: #888; background: #222; }
+    .badge-clear { color: #2ecc71; border-color: #2ecc71; background: #003311; }
+    .badge-retry { color: #f1c40f; border-color: #f1c40f; background: #332b00; }
+    .badge-unverified { color: #3498db; border-color: #3498db; background: #002244; }
+
+    /* ルーブリック判定フォーム（必須入力） */
+    .judgement-panel {
+      margin-top: 16px;
+      background: #070b16;
+      border: 2px solid var(--dq-border);
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    .judgement-panel legend {
+      padding: 0 8px;
+      color: var(--dq-gold);
+      font-weight: bold;
+      font-size: 1.05rem;
+    }
+
+    .judgement-panel label:not(.judgement-options label) {
+      display: block;
+      margin-top: 12px;
+      color: var(--dq-gold);
+      font-weight: bold;
+      font-size: 0.9rem;
+    }
+
+    .judgement-panel textarea {
+      width: 100%;
+      min-height: 80px;
+      margin-top: 4px;
+      padding: 10px;
+      color: #fff;
+      background: #000;
+      border: 2px solid #bbb;
+      border-radius: 4px;
+      font: inherit;
+      resize: vertical;
+    }
+    .judgement-panel textarea:focus-visible {
+      outline: 3px solid var(--dq-yellow);
+      outline-offset: 2px;
+    }
+
+    .judgement-options {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin: 16px 0;
+    }
+
+    .judgement-options label {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      min-height: 44px;
+      padding: 6px 12px;
+      border: 2px solid #777;
+      border-radius: 4px;
+      cursor: pointer;
+      background: #111;
+      font-weight: bold;
+    }
+    .judgement-options label:hover { border-color: var(--dq-gold); }
+    .judgement-options input[type="radio"]:checked + span {
+      color: var(--dq-yellow);
+    }
+
+    /* ボタンスタイル */
+    .dq-btn {
+      background: #111;
+      color: #fff;
+      border: 2px solid var(--dq-border);
+      border-radius: 6px;
+      padding: 10px 16px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      min-height: 44px;
+    }
+    .dq-btn:hover {
+      background: #222;
+      border-color: var(--dq-gold);
+      transform: translateY(-1px);
+    }
+    .dq-btn-primary {
+      background: #182848;
+      border-color: var(--dq-gold);
+      color: var(--dq-gold);
+      box-shadow: 0 0 8px rgba(241, 196, 15, 0.3);
+    }
+    .dq-btn-primary:hover {
+      background: #203a68;
+    }
+    .dq-btn-success {
+      background: #0e3a1e;
+      border-color: #2ecc71;
+      color: #2ecc71;
+    }
+    .dq-btn-success:hover {
+      background: #15552c;
+    }
+
+    /* ==========================================================
+       GEMINI SPELL PROMPTS (呪文カード)
+       ========================================================== */
+    .spell-card {
+      background: #091024;
+      border: 2px solid #3d5a80;
+      border-radius: 6px;
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .spell-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: var(--dq-yellow);
+      font-weight: bold;
+    }
+    .prompt-box {
+      width: 100%;
+      background: #000015;
+      border: 1px solid var(--dq-gold);
+      border-radius: 4px;
+      padding: 12px;
+      font-family: Consolas, Monaco, "Courier New", monospace;
+      font-size: 0.88rem;
+      color: #fff;
+      white-space: pre-wrap;
+      word-break: normal;
+      overflow-wrap: anywhere;
+      margin-bottom: 10px;
+      line-height: 1.6;
+      box-sizing: border-box;
+      resize: vertical;
+    }
+    .spell-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ==========================================================================
+       STAGE 3: SCHEDULE / GANTT TABLE & CHRONOS (軍師)
+       ========================================================================== */
+    .schedule-table-wrap {
+      overflow-x: auto;
+      margin-top: 14px;
+    }
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.92rem;
+    }
+    .schedule-table th, .schedule-table td {
+      border: 2px solid var(--dq-border);
+      padding: 10px 12px;
+      text-align: left;
+    }
+    .schedule-table th {
+      background: #111a33;
+      color: var(--dq-gold);
+      font-weight: bold;
+    }
+    .schedule-table td {
+      background: #050b18;
+    }
+    .schedule-table textarea, .schedule-table input {
+      width: 100%;
+      background: #000;
+      border: 1px solid #777;
+      color: #fff;
+      padding: 8px;
+      border-radius: 4px;
+      font: inherit;
+    }
+
+    .plan-detail-box {
+      margin-top: 16px;
+      background: #080e1e;
+      border: 2px solid var(--dq-gold);
+      border-radius: 6px;
+      padding: 16px;
+    }
+
+    /* ==========================================================================
+       STAGE 4: ADVENTURE BOOK (REFLECTIVE LOG)
+       ========================================================================== */
+    .book-field {
+      margin-bottom: 16px;
+    }
+    .book-field label {
+      display: block;
+      color: var(--dq-gold);
+      font-weight: bold;
+      font-size: 0.95rem;
+      margin-bottom: 6px;
+    }
+    .book-field textarea {
+      width: 100%;
+      min-height: 90px;
+      background: #000;
+      border: 2px solid #777;
+      border-radius: 4px;
+      color: #fff;
+      padding: 10px;
+      font: inherit;
+    }
+
+    /* ==========================================================================
+       BOTTOM FIXED COMMAND BAR (たたかう, じゅもん, どうぐ, にげる, さくせん)
+       ========================================================================== */
+    .command-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: #050515;
+      border-top: 3px solid var(--dq-border);
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.9);
+      padding: 8px 16px calc(8px + env(safe-area-inset-bottom));
+    }
+
+    .command-grid {
+      max-width: 1040px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+
+    .cmd-btn {
+      background: #0b1124;
+      color: #fff;
+      border: 2px solid var(--dq-border);
+      border-radius: 6px;
+      padding: 8px 6px;
+      font-size: 0.9rem;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: all 0.2s;
+      min-height: 48px;
+    }
+    .cmd-btn:hover, .cmd-btn:focus-visible {
+      background: #1a2850;
+      border-color: var(--dq-gold);
+      color: var(--dq-yellow);
+    }
+    .cmd-cursor {
+      display: inline-block;
+      opacity: 0;
+      transform: translateX(-2px);
+      color: var(--dq-gold);
+    }
+    .cmd-btn:is(:hover, :focus-visible) .cmd-cursor {
+      opacity: 1;
+      animation: command-cursor 900ms steps(2, end) infinite;
+    }
+    @keyframes command-cursor {
+      0%, 49% { opacity: 1; transform: translateX(-2px); }
+      50%, 100% { opacity: 0.45; transform: translateX(2px); }
+    }
+
+    /* ==========================================================================
+       MODAL DIALOGS (じゅもん一覧 / どうぐ一覧 / さくせん / 提出PDFガイド)
+       ========================================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2000;
+      background: rgba(0, 0, 0, 0.85);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.active {
+      display: flex;
+      animation: fadeIn 0.2s ease-out;
+    }
+    .modal-dialog {
+      background: var(--dq-window-bg);
+      border: 3px solid var(--dq-border);
+      outline: 3px solid #000;
+      border-radius: var(--window-radius);
+      box-shadow: inset 0 0 0 2px var(--dq-border), 0 8px 24px rgba(0,0,0,0.9);
+      max-width: 760px;
+      width: 100%;
+      max-height: 85vh;
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px dashed var(--dq-border);
+      padding-bottom: 10px;
+      margin-bottom: 14px;
+      color: var(--dq-gold);
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+    .modal-close-btn {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 1.5rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 4px 8px;
+    }
+
+    /* トースト通知 */
+    .exp-toast {
+      position: fixed;
+      top: max(96px, 14vh);
+      left: 50%;
+      z-index: 2100;
+      max-width: min(90vw, 520px);
+      padding: 12px 20px;
+      color: #fff;
+      background: #000022;
+      border: 3px double #fff;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.85);
+      font-weight: bold;
+      text-align: center;
+      opacity: 0;
+      transform: translate(-50%, 8px);
+      pointer-events: none;
+    }
+    .exp-toast.is-visible {
+      animation: exp-toast 2s ease-in-out 1;
+    }
+    @keyframes exp-toast {
+      0% { opacity: 0; transform: translate(-50%, 8px); }
+      16%, 75% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -6px); }
+    }
+
+    /* ==========================================================================
+       PRINT SPECIFIC STYLES & REPORT SHEET (A4完全最適化)
+       ========================================================================== */
+    .print-report-sheet {
+      display: none;
+    }
+
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding-bottom: 0 !important;
+        font-size: 11pt !important;
+        line-height: 1.45 !important;
+      }
+
+      .status-header,
+      .stage-nav,
+      .main-container,
+      .command-bar,
+      .pixel-symbols,
+      .exp-toast,
+      .modal-overlay,
+      .video-wrapper,
+      .task-banner,
+      .dq-btn {
+        display: none !important;
+      }
+
+      .print-report-sheet {
+        display: block !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #fff !important;
+        color: #000 !important;
+      }
+
+      .print-page {
+        page-break-after: always;
+      }
+      .print-page:last-child {
+        page-break-after: avoid;
+      }
+
+      .print-header {
+        border-bottom: 2px solid #000;
+        padding-bottom: 8px;
+        margin-bottom: 14px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      }
+      .print-title {
+        font-size: 15pt;
+        font-weight: bold;
+      }
+      .print-meta {
+        font-size: 9.5pt;
+        text-align: right;
+      }
+
+      .print-sec {
+        margin-bottom: 16px;
+        page-break-inside: avoid;
+      }
+      .print-sec-title {
+        font-size: 11pt;
+        font-weight: bold;
+        background: #eee;
+        padding: 4px 8px;
+        border-left: 5px solid #333;
+        margin-bottom: 6px;
+      }
+
+      .print-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 6px;
+        font-size: 9.5pt;
+      }
+      .print-table th, .print-table td {
+        border: 1px solid #333;
+        padding: 6px 8px;
+        text-align: left;
+        vertical-align: top;
+      }
+      .print-table th {
+        background: #f5f5f5;
+        font-weight: bold;
+      }
+
+      .print-boss-block {
+        border: 1px solid #666;
+        padding: 8px;
+        margin-bottom: 8px;
+        border-radius: 4px;
+        background: #fafafa;
+        page-break-inside: avoid;
+      }
+      .print-boss-head {
+        font-weight: bold;
+        display: flex;
+        justify-content: space-between;
+        border-bottom: 1px dashed #999;
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+      }
+      .print-label {
+        font-weight: bold;
+        color: #222;
+        font-size: 9pt;
+        margin-top: 4px;
+      }
+      .print-text {
+        font-size: 9.5pt;
+        white-space: pre-wrap;
+        margin-bottom: 4px;
+        background: #fff;
+        padding: 4px 6px;
+        border: 1px solid #ddd;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       ORIGINAL 8BIT JRPG INLINE SVG SPRITES
+       ========================================================================== -->
+  <svg class="pixel-symbols" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <defs>
+      <!-- ① 曖昧王 (Sprite) -->
+      <symbol id="sprite-ambiguous-king" viewBox="0 0 32 32">
+        <g class="pixel-art">
+          <rect x="11" y="3" width="10" height="2" fill="#d6a7ff"/>
+          <rect x="8" y="5" width="16" height="3" fill="#9b59b6"/>
+          <rect x="6" y="8" width="20" height="3" fill="#75409a"/>
+          <rect x="8" y="11" width="16" height="8" fill="#54266f"/>
+          <rect x="5" y="19" width="22" height="4" fill="#6d3590"/>
+          <rect x="3" y="23" width="10" height="3" fill="#8b52a8" opacity=".8"/>
+          <rect x="17" y="23" width="12" height="3" fill="#8b52a8" opacity=".65"/>
+          <rect x="7" y="27" width="8" height="2" fill="#b480cb" opacity=".55"/>
+          <rect x="19" y="27" width="7" height="2" fill="#b480cb" opacity=".4"/>
+          <rect class="mist-face mist-face-a" x="10" y="10" width="12" height="7" fill="#321347"/>
+          <rect class="mist-face mist-face-b" x="9" y="11" width="14" height="6" fill="#44205c"/>
+          <rect class="wicked-eye" x="11" y="12" width="3" height="2" fill="#f8e56b"/>
+          <rect class="wicked-eye" x="18" y="12" width="3" height="2" fill="#f8e56b"/>
+          <rect x="14" y="16" width="4" height="1" fill="#c38be0"/>
+          <rect x="2" y="9" width="4" height="2" fill="#9b59b6" opacity=".55"/>
+          <rect x="25" y="6" width="5" height="2" fill="#b47bd3" opacity=".45"/>
+          <rect x="1" y="17" width="6" height="2" fill="#75409a" opacity=".45"/>
+          <rect x="26" y="18" width="5" height="2" fill="#9b59b6" opacity=".55"/>
+        </g>
+      </symbol>
+
+      <!-- ② 既知王 (Sprite) -->
+      <symbol id="sprite-known-king" viewBox="0 0 32 32">
+        <g class="pixel-art">
+          <rect x="3" y="8" width="7" height="3" fill="#a85b32"/>
+          <rect x="2" y="11" width="9" height="3" fill="#e4d2a4"/>
+          <rect x="22" y="7" width="8" height="3" fill="#8e4930"/>
+          <rect x="21" y="10" width="10" height="3" fill="#e7d6a9"/>
+          <rect x="1" y="23" width="30" height="3" fill="#7c3f28"/>
+          <rect x="3" y="26" width="26" height="3" fill="#d7c290"/>
+          <rect x="5" y="29" width="22" height="2" fill="#71402c"/>
+          <rect x="12" y="4" width="8" height="3" fill="#b8f2b0"/>
+          <rect x="10" y="7" width="12" height="7" fill="#2ecc71"/>
+          <rect x="12" y="9" width="2" height="2" fill="#13251a"/>
+          <rect x="18" y="9" width="2" height="2" fill="#13251a"/>
+          <rect x="14" y="12" width="4" height="1" fill="#155e35"/>
+          <rect x="8" y="14" width="16" height="9" fill="#218c51"/>
+          <rect x="6" y="17" width="4" height="5" fill="#54d883"/>
+          <rect x="22" y="17" width="4" height="5" fill="#54d883"/>
+          <rect x="9" y="19" width="7" height="5" fill="#fff4cf"/>
+          <rect x="16" y="19" width="7" height="5" fill="#f5e2ae"/>
+          <rect x="15" y="19" width="2" height="6" fill="#9b623d"/>
+          <rect class="turning-page" x="17" y="17" width="5" height="2" fill="#fff9df"/>
+          <rect x="10" y="20" width="4" height="1" fill="#7a654d"/>
+          <rect x="18" y="21" width="4" height="1" fill="#7a654d"/>
+        </g>
+      </symbol>
+
+      <!-- ③ 丸投げ王 (Sprite) -->
+      <symbol id="sprite-delegation-king" viewBox="0 0 32 32">
+        <g class="pixel-art">
+          <rect x="1" y="9" width="7" height="4" fill="#8f2424"/>
+          <rect x="3" y="6" width="3" height="3" fill="#c63b32"/>
+          <rect x="24" y="9" width="7" height="4" fill="#8f2424"/>
+          <rect x="26" y="6" width="3" height="3" fill="#c63b32"/>
+          <rect x="8" y="3" width="4" height="3" fill="#f0c36a"/>
+          <rect x="20" y="3" width="4" height="3" fill="#f0c36a"/>
+          <rect x="7" y="6" width="18" height="10" fill="#d84436"/>
+          <rect x="5" y="9" width="4" height="5" fill="#ad2d2d"/>
+          <rect x="23" y="9" width="4" height="5" fill="#ad2d2d"/>
+          <rect x="10" y="9" width="3" height="2" fill="#fff"/>
+          <rect x="19" y="9" width="3" height="2" fill="#fff"/>
+          <rect x="11" y="10" width="2" height="1" fill="#28130f"/>
+          <rect x="19" y="10" width="2" height="1" fill="#28130f"/>
+          <rect x="14" y="13" width="4" height="2" fill="#57130f"/>
+          <rect x="8" y="16" width="16" height="10" fill="#b72e2b"/>
+          <rect x="5" y="18" width="5" height="7" fill="#d84436"/>
+          <rect x="22" y="18" width="5" height="7" fill="#d84436"/>
+          <rect x="9" y="26" width="5" height="4" fill="#7f2524"/>
+          <rect x="18" y="26" width="5" height="4" fill="#7f2524"/>
+          <rect x="9" y="17" width="14" height="9" fill="#f7edcf"/>
+          <rect x="10" y="18" width="12" height="1" fill="#d7c39c"/>
+          <path d="M10 19H12V20H14V21H18V20H20V19H22V21H20V22H18V23H14V22H12V21H10Z" fill="#c8ae7e"/>
+        </g>
+      </symbol>
+
+      <!-- ④ 空論王 (Sprite) -->
+      <symbol id="sprite-theory-king" viewBox="0 0 32 32">
+        <g class="pixel-art">
+          <rect x="10" y="3" width="12" height="3" fill="#9dd7ff"/>
+          <rect x="8" y="6" width="16" height="9" fill="#2f80c1"/>
+          <rect x="10" y="9" width="12" height="2" fill="#132b42"/>
+          <rect x="11" y="9" width="3" height="2" fill="#c8efff"/>
+          <rect x="18" y="9" width="3" height="2" fill="#c8efff"/>
+          <rect x="6" y="15" width="18" height="12" fill="#246aa0"/>
+          <rect x="8" y="17" width="14" height="8" fill="#68b9e8"/>
+          <rect x="10" y="18" width="6" height="1" fill="#d9f5ff"/>
+          <rect x="10" y="20" width="3" height="4" fill="none" stroke="#d9f5ff"/>
+          <rect x="17" y="18" width="3" height="5" fill="none" stroke="#d9f5ff"/>
+          <rect x="8" y="27" width="6" height="3" fill="#174d78"/>
+          <rect x="18" y="27" width="6" height="3" fill="#174d78"/>
+          <rect x="26" y="4" width="3" height="20" fill="#f1c40f"/>
+          <rect x="25" y="7" width="1" height="1" fill="#6a5311"/>
+          <rect x="25" y="11" width="1" height="1" fill="#6a5311"/>
+          <rect x="25" y="15" width="1" height="1" fill="#6a5311"/>
+          <rect x="23" y="23" width="8" height="2" fill="#d3a90e"/>
+          <rect x="26" y="25" width="3" height="4" fill="#8d6c0b"/>
+        </g>
+      </symbol>
+
+      <!-- 勇者パーティ (Sprite) -->
+      <symbol id="sprite-student-party" viewBox="0 0 48 32">
+        <g class="pixel-art">
+          <rect x="3" y="5" width="8" height="3" fill="#6b4526"/>
+          <rect x="2" y="8" width="10" height="7" fill="#efbd8b"/>
+          <rect x="4" y="10" width="2" height="2" fill="#2a211a"/>
+          <rect x="8" y="10" width="2" height="2" fill="#2a211a"/>
+          <rect x="3" y="15" width="10" height="9" fill="#e67e22"/>
+          <rect x="4" y="24" width="3" height="6" fill="#31547c"/>
+          <rect x="9" y="24" width="3" height="6" fill="#31547c"/>
+          <rect x="12" y="17" width="4" height="6" fill="#f5e7c4"/>
+          <rect x="13" y="18" width="2" height="1" fill="#5b5144"/>
+
+          <rect x="20" y="4" width="9" height="4" fill="#23395d"/>
+          <rect x="19" y="8" width="11" height="7" fill="#dca475"/>
+          <rect x="21" y="10" width="2" height="2" fill="#201915"/>
+          <rect x="27" y="10" width="2" height="2" fill="#201915"/>
+          <rect x="20" y="15" width="10" height="9" fill="#2ecc71"/>
+          <rect x="21" y="24" width="3" height="6" fill="#263c5a"/>
+          <rect x="27" y="24" width="3" height="6" fill="#263c5a"/>
+          <rect x="16" y="17" width="4" height="5" fill="#7bc7ef"/>
+          <rect x="16" y="16" width="4" height="2" fill="#d9f4ff"/>
+
+          <rect x="36" y="5" width="9" height="3" fill="#492c52"/>
+          <rect x="35" y="8" width="11" height="7" fill="#efc49c"/>
+          <rect x="37" y="10" width="2" height="2" fill="#251d19"/>
+          <rect x="43" y="10" width="2" height="2" fill="#251d19"/>
+          <rect x="36" y="15" width="10" height="9" fill="#9b59b6"/>
+          <rect x="37" y="24" width="3" height="6" fill="#37475f"/>
+          <rect x="43" y="24" width="3" height="6" fill="#37475f"/>
+          <rect x="32" y="17" width="5" height="6" fill="#242c38"/>
+          <rect x="33" y="18" width="3" height="2" fill="#67d2ff"/>
+        </g>
+      </symbol>
+
+      <!-- 審判者 / 時の軍師 (Sprite) -->
+      <symbol id="sprite-judge-master" viewBox="0 0 32 32">
+        <g class="pixel-art">
+          <rect x="10" y="2" width="12" height="3" fill="#f39c12"/>
+          <rect x="8" y="5" width="16" height="5" fill="#d35400"/>
+          <rect x="12" y="7" width="8" height="6" fill="#f5cba7"/>
+          <rect x="13" y="9" width="2" height="2" fill="#2c3e50"/>
+          <rect x="17" y="9" width="2" height="2" fill="#2c3e50"/>
+          <rect x="11" y="12" width="10" height="7" fill="#ecf0f1"/>
+          <rect x="7" y="14" width="18" height="14" fill="#34495e"/>
+          <rect x="14" y="16" width="4" height="12" fill="#f1c40f"/>
+          <rect x="25" y="8" width="2" height="20" fill="#bdc3c7"/>
+          <rect x="24" y="6" width="4" height="3" fill="#e74c3c"/>
+        </g>
+      </symbol>
+
+      <!-- A: 魔王ストップ時計 (Icon) -->
+      <symbol id="icon-stopwatch" viewBox="0 0 32 32">
+        <g class="pixel-art">
+          <rect x="8" y="0" width="3" height="3" fill="#e74c3c"/>
+          <rect x="21" y="0" width="3" height="3" fill="#e74c3c"/>
+          <rect x="13" y="0" width="6" height="2" fill="#f1c40f"/>
+          <rect x="12" y="2" width="8" height="3" fill="#f1c40f"/>
+          <rect x="14" y="5" width="4" height="3" fill="#9b7b10"/>
+          <rect x="7" y="8" width="18" height="3" fill="#d8e5ec"/>
+          <rect x="5" y="11" width="22" height="14" fill="#b7c9d3"/>
+          <rect x="8" y="13" width="16" height="10" fill="#102030"/>
+          <rect x="10" y="15" width="3" height="6" fill="#e74c3c"/>
+          <rect x="14" y="15" width="3" height="6" fill="#f1c40f"/>
+          <rect x="18" y="15" width="3" height="6" fill="#f1c40f"/>
+          <rect x="8" y="25" width="16" height="3" fill="#879ca8"/>
+          <rect x="3" y="12" width="3" height="5" fill="#e74c3c"/>
+          <rect x="26" y="12" width="3" height="5" fill="#e74c3c"/>
+        </g>
+      </symbol>
+
+      <!-- B: 罠の宝箱 (Icon) -->
+      <symbol id="icon-trap-chest" viewBox="0 0 32 32">
+        <g class="pixel-art">
+          <rect x="5" y="6" width="22" height="4" fill="#9b5b24"/>
+          <rect x="3" y="10" width="26" height="7" fill="#c97a2c"/>
+          <rect x="5" y="17" width="22" height="10" fill="#9b5b24"/>
+          <rect x="14" y="11" width="4" height="7" fill="#f1c40f"/>
+          <rect x="4" y="16" width="24" height="3" fill="#4d2d17"/>
+          <rect x="8" y="16" width="3" height="3" fill="#fff"/>
+          <rect x="21" y="16" width="3" height="3" fill="#fff"/>
+          <rect x="9" y="17" width="2" height="2" fill="#e74c3c"/>
+          <rect x="21" y="17" width="2" height="2" fill="#e74c3c"/>
+          <rect x="10" y="22" width="3" height="3" fill="#f5e6cc"/>
+          <rect x="19" y="22" width="3" height="3" fill="#f5e6cc"/>
+          <rect x="14" y="22" width="4" height="2" fill="#451a18"/>
+        </g>
+      </symbol>
+
+      <!-- C: ガチャ箱 (Icon) -->
+      <symbol id="icon-gacha-box" viewBox="0 0 32 32">
+        <g class="pixel-art">
+          <rect x="5" y="4" width="22" height="5" fill="#8e44ad"/>
+          <rect x="3" y="9" width="26" height="18" fill="#5e3370"/>
+          <rect x="7" y="11" width="18" height="10" fill="#160d1d"/>
+          <rect x="9" y="13" width="3" height="3" fill="#f1c40f"/>
+          <rect x="14" y="12" width="4" height="4" fill="#2ecc71"/>
+          <rect x="20" y="14" width="3" height="3" fill="#67b7ef"/>
+          <rect x="13" y="18" width="3" height="2" fill="#e74c3c"/>
+          <rect x="18" y="18" width="3" height="2" fill="#f5f5f5"/>
+          <rect x="12" y="23" width="8" height="5" fill="#f1c40f"/>
+          <rect x="14" y="24" width="4" height="2" fill="#59490d"/>
+        </g>
+      </symbol>
+    </defs>
+  </svg>
+
+  <!-- ==========================================================================
+       STICKY STATUS HEADER (HP / MP=10 / 準備進捗 / サウンド / いますること)
+       ========================================================================== -->
+  <header class="status-header">
+    <div class="status-grid">
+      <!-- HP: 残り時間体力 (90分) -->
+      <div class="status-item">
+        <span class="status-label">たいりょく</span>
+        <div class="gauge-container" role="meter" aria-label="残り時間体力" aria-valuenow="5400" aria-valuemin="0" aria-valuemax="5400">
+          <div class="gauge-fill gauge-hp" id="hp-gauge" style="width: 100%;"></div>
+          <div class="gauge-text" id="hp-text">90:00</div>
+        </div>
+      </div>
+
+      <!-- MP: Gemini反復枠 (MP 10 / 10) -->
+      <div class="status-item">
+        <span class="status-label">MP</span>
+        <div class="gauge-container" id="mp-meter" role="meter" aria-label="じゅもんの残り回数" aria-valuenow="10" aria-valuemin="0" aria-valuemax="10">
+          <div class="gauge-fill gauge-mp" id="mp-gauge" style="width: 100%;"></div>
+          <div class="gauge-text" id="mp-text">MP 10 / 10</div>
+        </div>
+      </div>
+
+      <!-- 準備進捗: 0 / 6 記録 (四天王4 + 工程表 + 冒険の書) -->
+      <div class="status-item">
+        <span class="status-label">準備</span>
+        <div class="gauge-container" id="progress-meter" role="meter" aria-label="調査準備の記録進捗" aria-valuenow="0" aria-valuemin="0" aria-valuemax="6">
+          <div class="gauge-fill gauge-exp" id="exp-gauge" style="width: 0%;"></div>
+          <div class="gauge-text" id="exp-text">0 / 6 記録</div>
+        </div>
+      </div>
+
+      <!-- 音声トグル & PDF提出ショートカット -->
+      <div class="status-item" style="justify-content: flex-end; gap: 8px;">
+        <button class="sound-toggle" id="sound-btn" type="button" aria-label="効果音の切り替え">
+          <span id="sound-icon">🔊</span>
+          <span id="sound-label">効果音(SE): 入</span>
+        </button>
+        <button class="sound-toggle" id="header-pdf-btn" type="button" style="border-color: var(--dq-gold); color: var(--dq-gold);" aria-label="提出PDF作成メニュー">
+          <span>📄</span>
+          <span>提出/PDF</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- いますることバナー (F型視線誘導の起点) -->
+    <div class="task-banner">
+      <span class="task-arrow">▶</span>
+      <span id="current-task-text">【オープニング】まず動画を視聴し、本日のミッション「四天王討伐クエスト」を確認せよ！</span>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       MAIN CONTENT CONTAINER (STAGE TABS)
+       ========================================================================== -->
+  <main class="main-container">
+    <!-- ステージナビゲーション -->
+    <nav class="stage-nav" aria-label="進行ステージ選択">
+      <button class="stage-tab-btn active" data-stage="0" type="button">Stage 0: 冒険の始まり</button>
+      <button class="stage-tab-btn" data-stage="1" type="button">Stage 1: 3つの武器</button>
+      <button class="stage-tab-btn" data-stage="2" type="button">Stage 2: 四天王の試練</button>
+      <button class="stage-tab-btn" data-stage="3" type="button">Stage 3: 旅の工程表</button>
+      <button class="stage-tab-btn" data-stage="4" type="button">Stage 4: 冒険の書</button>
+      <button class="stage-tab-btn" data-stage="5" type="button" style="border-color: #9b59b6; color: #e0b0ff;">⚔️ Extra: 自作武器(Vibe)</button>
+    </nav>
+
+    <!-- ========================================================================
+         STAGE 0: OPENING / MISSION INTRO
+         ======================================================================== -->
+    <section class="tab-pane active" id="pane-stage-0" aria-labelledby="stage-0-title">
+      <!-- ★各タブ最上部: 16:9 動画スペース -->
+      <!-- ★オープニング全体ガイダンス動画スペース (YouTube 16:9 埋め込み) -->
+      <div class="video-wrapper">
+        <div class="video-frame" id="youtube-video-container">
+          <!-- 全体ガイダンス動画（Google Vids作成・YouTube公開版） -->
+          <iframe id="youtube-iframe" style="width: 100%; height: 100%; border: none;" src="https://www.youtube-nocookie.com/embed/_IyNtLw9Mgw?rel=0" title="9/30高2総探ガイダンス動画" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+
+        <!-- 外部リンクバー -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px; max-width: 760px; margin-left: auto; margin-right: auto; flex-wrap: wrap; gap: 8px;">
+          <div style="font-size: 0.8rem; color: var(--dq-gold);">
+            🎬 <strong>全体ガイダンス動画（約2分半）</strong>: まずはこの動画を見て90分の冒険フローを掴もう！
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <a href="https://youtu.be/_IyNtLw9Mgw" target="_blank" rel="noopener noreferrer" class="dq-btn dq-btn-sm" style="font-size: 0.75rem; border-color: #e74c3c; color: #ff7675;" title="YouTubeで直接開く">
+              ▶ YouTubeで開く ↗
+            </a>
+            <a href="https://docs.google.com/presentation/d/13pNJRy6Rka-9Vwg7gUpMuxHjG2egN4UQBZ7bG-vSg8Q/edit" target="_blank" rel="noopener noreferrer" class="dq-btn dq-btn-sm" style="font-size: 0.75rem; border-color: #f1c40f; color: #f1c40f;" title="Googleスライド原本を開く">
+              📊 スライド原本 ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- Googleスライド・ドキュメント直通リンク -->
+        <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; max-width: 760px; margin-left: auto; margin-right: auto;">
+          <a href="https://docs.google.com/presentation/d/13pNJRy6Rka-9Vwg7gUpMuxHjG2egN4UQBZ7bG-vSg8Q/edit" target="_blank" rel="noopener noreferrer" class="dq-btn dq-btn-sm" style="font-size: 0.75rem; border-color: #f1c40f; color: #f1c40f;" title="Googleスライド原本を開く">
+            📊 スライド原本 ↗
+          </a>
+          <a href="https://vids.google.com/" target="_blank" rel="noopener noreferrer" class="dq-btn dq-btn-sm" style="font-size: 0.75rem; border-color: #3498db; color: #3498db;" title="Google Vidsを開く">
+            🎥 Google Vids ↗
+          </a>
+        </div>
+
+        <div class="video-summary" style="margin-top: 8px;">
+          <strong>動画の要点（90分の冒険フロー）:</strong>
+          ①<strong>【武器選択（Stage 1）】</strong>手元のワークシート④を確認し、型を選択（バイブコーディングで自作も可能！）<br>
+          ②<strong>【四天王の試練（Stage 2）】</strong>Geminiに呪文を唱え、固定ルーブリックで粗を探してブラッシュアップ！<br>
+          ③<strong>【旅の工程表（Stage 3）】</strong>11/11外部依頼期限と12/11一日活動日に向けたスケジュールを軍師と点検！<br>
+          ④<strong>【冒険の書（Stage 4）】</strong>振り返りを記入し、A4レポートPDFをロイロノートへ提出してクエスト完了！
+        </div>
+      </div>
+
+      <div class="dq-box">
+        <div class="dq-box-header">
+          <span id="stage-0-title">【Stage 0】四天王を倒して楽園への扉をひらけ！ (目安: 10分)</span>
+          <span class="badge badge-before">所要時間: 10分</span>
+        </div>
+
+        <div class="intro-grid">
+          <div>
+            <p><strong>勇者よ、よくぞ参った！</strong></p>
+            <p>君たちが挑む「総合的な探究の時間」は、未知の大陸を切り拓く大冒険である。<br>
+            しかし、校外への調査・フィールドワークへ旅立つ君たちの前に、探究の質を脅かす<strong>「四天王」</strong>が立ちはだかった！</p>
+            <p style="margin-top: 8px; color: var(--dq-gold);">
+              ① <strong>曖昧王</strong>（問いがボヤけて何をするか見えない王）<br>
+              ② <strong>既知王</strong>（ネット検索で5分でわかることを調べる王）<br>
+              ③ <strong>丸投げ王</strong>（相手にすべてを依存し、自己負担を避ける王）<br>
+              ④ <strong>空論王</strong>（実現不可能な大風呂敷を広げる王）
+            </p>
+            <p style="margin-top: 8px;">
+              この90分で四天王の弱点を突き、仲間とともに企画を鍛え上げ、<strong>「実現可能な探究計画」</strong>を完成させよ！
+            </p>
+          </div>
+          <div>
+            <svg class="party-sprite" viewBox="0 0 48 32" role="img" aria-label="勇者パーティ3名">
+              <use href="#sprite-student-party"></use>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- 次へボタン (Z型動線) -->
+      <div style="text-align: right; margin-top: 16px;">
+        <button class="dq-btn dq-btn-primary js-next-stage" data-next="1" type="button">
+          武器を選びに行く (Stage 1へ) ▶
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         STAGE 1: 3 WEAPONS (MODEL PLAN A / B / C)
+         ======================================================================== -->
+    <section class="tab-pane" id="pane-stage-1" aria-labelledby="stage-1-title">
+
+      <div class="dq-box">
+        <div class="dq-box-header">
+          <span id="stage-1-title">【Stage 1】探究の型・3つの武器を装備せよ (目安: 15分)</span>
+          <span class="badge badge-before">所要時間: 15分</span>
+        </div>
+
+        <p>四天王と戦う前に、君たちの探究テーマに最もフィットする「調査手法の型（武器）」を選択・確認しよう。<br>
+        どの型にもメリットと落とし穴がある。先輩たちの見本モデルを参考にせよ。</p>
+
+        <div class="weapons-grid">
+          <!-- A: 比較検証の剣 (魔王ストップ時計) -->
+          <div class="weapon-card">
+            <div class="weapon-header">
+              <svg class="weapon-icon" viewBox="0 0 32 32" aria-hidden="true">
+                <use href="#icon-stopwatch"></use>
+              </svg>
+              <div>
+                <div class="weapon-title">A: 魔王ストップ時計（比較検証型）</div>
+                <div style="font-size: 0.8rem; color: #aaa;">条件を変えて結果を比べる型</div>
+              </div>
+            </div>
+            <div class="weapon-desc">
+              条件を変えて2つ以上の対象を比較・測定する型。<br>
+              <strong>例:</strong> 「音楽を聴きながら学習すると課題の正確さや学習時間に違いが出るか？」
+            </div>
+            <div class="weapon-details">
+              <strong>撃破のコツ:</strong> 測定指標（秒数・個数・正答率）を数値で定義し、同じ条件下で比較する。
+            </div>
+            <!-- 自作ツールの道案内 -->
+            <div style="margin-top: 8px; padding: 6px 10px; background: rgba(155, 89, 182, 0.15); border: 1px dashed #9b59b6; border-radius: 4px; font-size: 0.8rem; color: #e0b0ff;">
+              💡 <strong>この場合は自分たちでツール（武器）を作ることもできるぞ！</strong><br>
+              反応速度や集中力テストのWebアプリをAIにバイブコーディングで作らせて、生徒に試してもらう実験も可能！
+              <div style="text-align: right; margin-top: 4px;">
+                <button class="dq-btn js-goto-stage" data-stage="5" type="button" style="font-size: 0.72rem; padding: 2px 8px; border-color: #9b59b6; color: #e0b0ff;">
+                  ⚔️ 自作武器の鍛冶屋を見る ▶
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- B: 観察・記録の盾 (罠の宝箱) -->
+          <div class="weapon-card">
+            <div class="weapon-header">
+              <svg class="weapon-icon" viewBox="0 0 32 32" aria-hidden="true">
+                <use href="#icon-trap-chest"></use>
+              </svg>
+              <div>
+                <div class="weapon-title">B: 罠の宝箱（現場観察・インタビュー型）</div>
+                <div style="font-size: 0.8rem; color: #aaa;">現場に足を運び生の声を聞く型</div>
+              </div>
+            </div>
+            <div class="weapon-desc">
+              現地に足を運び、学校内や地域の人の行動や声を深く掘り下げる型。<br>
+              <strong>例:</strong> 「教室の〇〇を変えると、生徒の感じる過ごしやすさは変化するのか？」
+            </div>
+            <div class="weapon-details">
+              <strong>撃破のコツ:</strong> 「何を聞くか」を丸投げせず、事前に文献調査を終えて仮説と質問リストを固めておく。
+            </div>
+            <!-- 自作ツールの道案内 -->
+            <div style="margin-top: 8px; padding: 6px 10px; background: rgba(155, 89, 182, 0.15); border: 1px dashed #9b59b6; border-radius: 4px; font-size: 0.8rem; color: #e0b0ff;">
+              💡 <strong>この場合は自分たちでツール（武器）を作ることもできるぞ！</strong><br>
+              手書きメモの代わりに、河瀬駅前の通行量や危険箇所をスマホ画面タップで即時カウント・集計できるWebツールをバイブコーディングで自作可能！
+              <div style="text-align: right; margin-top: 4px;">
+                <button class="dq-btn js-goto-stage" data-stage="5" type="button" style="font-size: 0.72rem; padding: 2px 8px; border-color: #9b59b6; color: #e0b0ff;">
+                  ⚔️ 自作武器の鍛冶屋を見る ▶
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- C: 試作・アンケートの弓 (ガチャ箱) -->
+          <div class="weapon-card">
+            <div class="weapon-header">
+              <svg class="weapon-icon" viewBox="0 0 32 32" aria-hidden="true">
+                <use href="#icon-gacha-box"></use>
+              </svg>
+              <div>
+                <div class="weapon-title">C: ガチャ箱（プロトタイプ・実証実験型）</div>
+                <div style="font-size: 0.8rem; color: #aaa;">自分たちで作ったものを実際に使ってみる型</div>
+              </div>
+            </div>
+            <div class="weapon-desc">
+              自分たちで作ったPOPやルール、仕掛けを小さく試作し、反応を確かめる型。<br>
+              <strong>例:</strong> 「河瀬高校生の睡眠時間と、授業中の眠気には関係があるのか？（アンケート＆実証）」
+            </div>
+            <div class="weapon-details">
+              <strong>撃破のコツ:</strong> 大がかりにせず、校内やグループ内で試せる最小実験（MVP）にする。
+            </div>
+            <!-- 自作ツールの道案内 -->
+            <div style="margin-top: 8px; padding: 6px 10px; background: rgba(155, 89, 182, 0.15); border: 1px dashed #9b59b6; border-radius: 4px; font-size: 0.8rem; color: #e0b0ff;">
+              💡 <strong>この場合は自分たちでツール（武器）を作ることもできるぞ！</strong><br>
+              普通のGoogleフォームだと回答率が低い…そんな時は、ゲーム感覚で答えられる診断チャートやクイズ形式のWebアンケートをAIにサクッと錬成させよう！
+              <div style="text-align: right; margin-top: 4px;">
+                <button class="dq-btn js-goto-stage" data-stage="5" type="button" style="font-size: 0.72rem; padding: 2px 8px; border-color: #9b59b6; color: #e0b0ff;">
+                  ⚔️ 自作武器の鍛冶屋を見る ▶
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px; background: #000; border: 1px solid var(--dq-gold); padding: 12px; border-radius: 6px;">
+          <label for="weapon-selection" style="color: var(--dq-gold); font-weight: bold; display: block; margin-bottom: 6px;">
+            ⚔️ 選択する武器（型）を選んでください：
+          </label>
+          <select id="weapon-selection" style="width: 100%; max-width: 400px; padding: 8px; background: #111; color: #fff; border: 1px solid var(--dq-gold); border-radius: 4px; font: inherit; margin-bottom: 10px;">
+            <option value="A: 魔王ストップ時計（比較検証型）">A: 魔王ストップ時計（比較検証型）</option>
+            <option value="B: 罠の宝箱（現場観察・インタビュー型）">B: 罠の宝箱（現場観察・インタビュー型）</option>
+            <option value="C: ガチャ箱（プロトタイプ・実証実験型）">C: ガチャ箱（プロトタイプ・実証実験型）</option>
+            <option value="Extra: 自作ツール（バイブコーディング型）">⚔️ Extra: 自作ツール（バイブコーディング型）</option>
+          </select>
+
+          <label for="weapon-selection-memo" style="color: var(--dq-gold); font-weight: bold; display: block; margin-bottom: 6px;">
+            ✍️ 自分たちの探究で選択する武器（型）と、その理由・検証したいことをメモせよ：
+          </label>
+          <textarea id="weapon-selection-memo" style="width: 100%; min-height: 70px; background: #111; color: #fff; border: 1px solid #555; padding: 8px; border-radius: 4px; font: inherit;" placeholder="例: 私たちは高校生の睡眠と眠気の相関を調べたいので『C: ガチャ箱』を選択。全校生徒へアンケートを実施し、仮説を検証する。自作ツールを使う場合はそのアイデアも記入。"></textarea>
+        </div>
+      </div>
+
+      <!-- 次へボタン -->
+      <div style="display: flex; justify-content: space-between; margin-top: 16px;">
+        <button class="dq-btn js-prev-stage" data-prev="0" type="button">◀ 前に戻る</button>
+        <button class="dq-btn dq-btn-primary js-next-stage" data-next="2" type="button">
+          四天王の待つバトルアリーナへ (Stage 2へ) ▶
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         STAGE 2: FOUR KINGS BATTLE & RUBRIC JUDGEMENT (35分)
+         ======================================================================== -->
+    <section class="tab-pane" id="pane-stage-2" aria-labelledby="stage-2-title">
+
+      <div class="dq-box">
+        <div class="dq-box-header">
+          <span id="stage-2-title">【Stage 2】四天王の試練！固定ルーブリックで企画を磨け (目安: 35分)</span>
+          <span class="badge badge-before">所要時間: 35分</span>
+        </div>
+
+        <p>四天王を1体ずつ選び、Geminiのプロンプト（呪文）を使って企画の弱点を突かせよ！<br>
+        AIからのフィードバックを読み、固定ルーブリックに従って<strong>「根拠箇所」「満たした点」「足りない点」「修正案」</strong>を入力して判定を記録するのだ。<br>
+        <small style="color: var(--dq-gold);">※四天王それぞれの入力内容はタブを切り替えても自動保存され、最後のA4レポート・PDFに全員分が記録されます。</small></p>
+
+        <!-- 注意書き（学校手続層の分離） -->
+        <div style="background: #111a2e; border-left: 4px solid var(--dq-blue); padding: 8px 12px; margin: 10px 0; font-size: 0.85rem; color: #cfd8dc;">
+          ℹ️ <strong>注意:</strong> この画面は問いと調査計画を改善する学習用です。外部調査の実施可否を決定するものではありません。連絡・同意・安全確認などの学校手続は、先生の案内する別の手順（11月11日までの依頼メール等）で行います。
+        </div>
+
+        <!-- ボス選択カードグリッド -->
+        <div class="boss-grid" role="tablist" aria-label="四天王選択">
+          <!-- ① 曖昧王 -->
+          <div class="boss-select-card active" data-boss="1" id="boss-card-1" role="tab" aria-selected="true" tabindex="0">
+            <svg class="boss-sprite" viewBox="0 0 32 32" aria-hidden="true" style="width: 64px; height: 64px; margin: 0 auto 6px;">
+              <use href="#sprite-ambiguous-king"></use>
+            </svg>
+            <div style="font-weight: bold; color: var(--dq-gold);">① 曖昧王</div>
+            <div style="font-size: 0.8rem; color: #aaa;">問いの焦点化・具体性</div>
+            <div style="margin-top: 6px;">
+              <span class="badge badge-before" id="badge-boss-1">○ 挑戦前</span>
+            </div>
+          </div>
+
+          <!-- ② 既知王 -->
+          <div class="boss-select-card" data-boss="2" id="boss-card-2" role="tab" aria-selected="false" tabindex="0">
+            <svg class="boss-sprite" viewBox="0 0 32 32" aria-hidden="true" style="width: 64px; height: 64px; margin: 0 auto 6px;">
+              <use href="#sprite-known-king"></use>
+            </svg>
+            <div style="font-weight: bold; color: var(--dq-gold);">② 既知王</div>
+            <div style="font-size: 0.8rem; color: #aaa;">先行調査・独自性</div>
+            <div style="margin-top: 6px;">
+              <span class="badge badge-before" id="badge-boss-2">○ 挑戦前</span>
+            </div>
+          </div>
+
+          <!-- ③ 丸投げ王 -->
+          <div class="boss-select-card" data-boss="3" id="boss-card-3" role="tab" aria-selected="false" tabindex="0">
+            <svg class="boss-sprite" viewBox="0 0 32 32" aria-hidden="true" style="width: 64px; height: 64px; margin: 0 auto 6px;">
+              <use href="#sprite-delegation-king"></use>
+            </svg>
+            <div style="font-weight: bold; color: var(--dq-gold);">③ 丸投げ王</div>
+            <div style="font-size: 0.8rem; color: #aaa;">自己負担と倫理・マナー</div>
+            <div style="margin-top: 6px;">
+              <span class="badge badge-before" id="badge-boss-3">○ 挑戦前</span>
+            </div>
+          </div>
+
+          <!-- ④ 空論王 -->
+          <div class="boss-select-card" data-boss="4" id="boss-card-4" role="tab" aria-selected="false" tabindex="0">
+            <svg class="boss-sprite" viewBox="0 0 32 32" aria-hidden="true" style="width: 64px; height: 64px; margin: 0 auto 6px;">
+              <use href="#sprite-theory-king"></use>
+            </svg>
+            <div style="font-weight: bold; color: var(--dq-gold);">④ 空論王</div>
+            <div style="font-size: 0.8rem; color: #aaa;">12/11一日活動日の実現性</div>
+            <div style="margin-top: 6px;">
+              <span class="badge badge-before" id="badge-boss-4">○ 挑戦前</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 対決アリーナ (選択中のボス詳細 & 対話) -->
+        <div class="boss-battle-arena" id="boss-battle-arena">
+          <div class="boss-arena-header">
+            <svg class="boss-sprite" id="arena-boss-sprite" viewBox="0 0 32 32" role="img" aria-labelledby="arena-boss-title arena-boss-desc">
+              <title id="arena-boss-title">曖昧王</title>
+              <desc id="arena-boss-desc">紫の霧に包まれ、顔が揺らいで見える王</desc>
+              <use href="#sprite-ambiguous-king" id="arena-boss-use"></use>
+            </svg>
+            <div class="boss-info">
+              <div class="boss-title-row">
+                <span class="boss-title" id="arena-boss-name">① 曖昧王（あいまいおう）</span>
+                <span class="badge badge-before" id="arena-boss-badge">○ 挑戦前</span>
+              </div>
+              <div style="font-size: 0.9rem; color: #ddd;" id="arena-boss-catchphrase">
+                「お前たちの問いは霧のようだ！何を言いたいのかサッパリわからんな！」
+              </div>
+              <div style="font-size: 0.85rem; color: var(--dq-yellow); margin-top: 4px;" id="arena-boss-weakness">
+                弱点: どんなデータを集めればよいか具体的にイメージできる問い（「はい／いいえ」だけで終わらない問い）
+              </div>
+            </div>
+          </div>
+
+          <!-- 専用ジェミニプロンプト（呪文・生徒が直接編集可能） -->
+          <div class="spell-card">
+            <div class="spell-header">
+              <span id="spell-title">✨ 対曖昧王 詠唱プロンプト（固定ルーブリック照合呪文）</span>
+              <span style="font-size: 0.8rem; color: #aaa;">MP消費: 1</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--dq-yellow); margin-bottom: 6px;">
+              ✍️ 下の枠内の <strong>[問いを入力]</strong> や <strong>[仮説を入力]</strong> に手元のワークシートの内容を書き込んでからコピーしよう！
+            </p>
+            <textarea class="prompt-box" id="spell-prompt-text" rows="10" placeholder="プロンプトを読み込み中..."></textarea>
+
+            <div class="spell-actions">
+              <button class="dq-btn dq-btn-primary js-copy-prompt" type="button">
+                📋 編集したプロンプトをコピーしてGeminiに投げる (-1 MP)
+              </button>
+              <button class="dq-btn" id="btn-reset-prompt" type="button" style="border-color: #3498db; color: #3498db;" title="誤って消した時に最初のひな形に戻します">
+                🔄 プロンプト復活（初期ひな形に戻す）
+              </button>
+              <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="dq-btn">
+                🌐 Geminiを開く (別タブ) ↗
+              </a>
+            </div>
+          </div>
+
+          <!-- ルーブリック判定記録フォーム（4項目必須入力） -->
+          <form class="judgement-panel js-judgement-form" data-boss="1" id="judgement-form">
+            <fieldset style="border: none; padding: 0;">
+              <legend id="form-legend">曖昧王の判定記録（固定ルーブリック照合）</legend>
+
+              <label for="boss-evidence">1. 根拠の該当箇所（Geminiの回答または自分たちの記述の該当行）:</label>
+              <textarea id="boss-evidence" name="evidence" required placeholder="例: Geminiの指摘「調査対象が『地域の人』と広すぎる」の記述"></textarea>
+
+              <label for="boss-met">2. 具体的に満たした点（ルーブリック上クリアできている点）:</label>
+              <textarea id="boss-met" name="met" required placeholder="例: 「自分たちが本当に知りたいことか」という熱意の点は満たしている。"></textarea>
+
+              <label for="boss-gap">3. 具体的に足りない点（改善が求められる課題）:</label>
+              <textarea id="boss-gap" name="gap" required placeholder="例: 「どんなデータを集めればよいか」の測定指標が具体的でない。"></textarea>
+
+              <label for="boss-next">4. 次に行う修正案（どう書き直すか・どう計画するか）:</label>
+              <textarea id="boss-next" name="next" required placeholder="例: 対象を『河瀬駅を利用する高校生100人へのアンケート』に具体化する。"></textarea>
+
+              <!-- 判定ラジオボタン -->
+              <div class="judgement-options" id="judgement-radio-group">
+                <label>
+                  <input type="radio" name="status" value="clear" required>
+                  <span>✓ 撃破（ルーブリック達成！）</span>
+                </label>
+                <label>
+                  <input type="radio" name="status" value="retry">
+                  <span>↻ 再挑戦（要ブラッシュアップ）</span>
+                </label>
+                <!-- 曖昧王では非表示、2〜4で表示されるラジオボタン -->
+                <label id="opt-unverified" style="display: none;">
+                  <input type="radio" name="status" value="unverified">
+                  <span>? 資料未確認（要文献調査）</span>
+                </label>
+              </div>
+
+              <!-- ★ボタン群のリニューアル（役割を明確化 & 再戦・審判者機能） -->
+              <div style="background: #000; border: 1px solid #444; padding: 12px; border-radius: 6px; margin-top: 14px;">
+                <div style="font-size: 0.85rem; color: var(--dq-gold); margin-bottom: 8px; font-weight: bold;">
+                  🛠️ アクションコマンド（目的に合わせて選んでください）：
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                  <!-- ① 修正案で再戦 -->
+                  <button type="button" class="dq-btn dq-btn-primary" id="btn-rechallenge-boss">
+                    ⚔️ 修正案で四天王に再戦（再判定プロンプトコピー）
+                  </button>
+
+                  <!-- ② 審判者に投げる -->
+                  <button type="button" class="dq-btn" id="btn-ask-judge" style="border-color: #f39c12; color: #f39c12;">
+                    ⚖️ 審判者（大賢者）に最終判定を仰ぐ
+                  </button>
+
+                  <!-- ③ 反論する -->
+                  <button type="button" class="dq-btn js-copy-appeal">
+                    📜 Geminiへ反論（異議申立てコピー）
+                  </button>
+
+                  <!-- ④ 記録を保存 -->
+                  <button type="submit" class="dq-btn dq-btn-success" id="btn-save-judgement">
+                    💾 判定結果を冒険の書にセーブ (+1 EXP)
+                  </button>
+                </div>
+                <div style="font-size: 0.78rem; color: #888; margin-top: 6px;">
+                  ※Geminiとの対話で計画を修正したら「再戦」を押して再度Geminiに投げ、OKが出たら「セーブ」を押して進捗を加算しましょう。
+                </div>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+      </div>
+
+      <!-- 画面下部ナビゲーション -->
+      <div style="display: flex; justify-content: space-between; margin-top: 16px;">
+        <button class="dq-btn js-prev-stage" data-prev="1" type="button">◀ 前に戻る</button>
+        <button class="dq-btn dq-btn-primary js-next-stage" data-next="3" type="button">
+          旅の工程表を作成する (Stage 3へ) ▶
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         STAGE 3: SCHEDULE / GANTT TABLE (20分)
+         ======================================================================== -->
+    <section class="tab-pane" id="pane-stage-3" aria-labelledby="stage-3-title">
+
+      <div class="dq-box">
+        <div class="dq-box-header">
+          <span id="stage-3-title">【Stage 3】旅の工程表！10月〜12月のアクションプラン (目安: 20分)</span>
+          <span class="badge badge-before">所要時間: 20分</span>
+        </div>
+
+        <p>四天王との対峙で浮き彫りになった課題を解決するため、具体的な進行スケジュールを策定せよ！<br>
+        <strong>※60分経過時点で未撃破の王がいる場合、その王の克服タスクが自動的に工程表の最優先タスクとして転記されます。</strong></p>
+
+        <!-- 未解決タスク自動通知バナー -->
+        <div id="unresolved-task-banner" style="display: none; background: #331100; border: 2px solid var(--dq-gold); padding: 10px; border-radius: 6px; margin-bottom: 12px;">
+          <strong style="color: var(--dq-yellow);">⚠️ 未解決の王からの警告:</strong>
+          <span id="unresolved-task-list" style="margin-left: 6px;">まだ撃破できていない王の修正を最優先タスクに設定しました。</span>
+        </div>
+
+        <!-- リアルな学校日程に基づく広大な工程表テーブル -->
+        <div class="schedule-table-wrap">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th style="width: 18%;">実施日・時期</th>
+                <th style="width: 38%;">やること・アクション（具体的に）</th>
+                <th style="width: 20%;">担当者</th>
+                <th style="width: 24%;">完了条件（成果物・状態）</th>
+              </tr>
+            </thead>
+            <tbody id="schedule-tbody">
+              <tr>
+                <td><strong>10月14日（水）</strong><br><small>6限 グループ研究</small></td>
+                <td><textarea id="sch-task-1" rows="2" placeholder="四天王の指摘を反映した問いの確定、文献調査の開始">四天王の指摘を反映した問いの確定、文献調査の開始</textarea></td>
+                <td><input type="text" id="sch-owner-1" value="全員" placeholder="担当者"></td>
+                <td><input type="text" id="sch-goal-1" value="修正版ワークシート完成" placeholder="完了の目安"></td>
+              </tr>
+              <tr>
+                <td><strong>10月28日（水）</strong><br><small>6限 グループ研究</small></td>
+                <td><textarea id="sch-task-2" rows="2" placeholder="先行文献・既存データの読み込み、外部質問項目の下書き">先行文献・既存データの読み込み、外部質問項目の下書き</textarea></td>
+                <td><input type="text" id="sch-owner-2" placeholder="担当者"></td>
+                <td><input type="text" id="sch-goal-2" value="事前調査ノート・質問素案" placeholder="完了の目安"></td>
+              </tr>
+              <tr>
+                <td><strong>11月 4日（水）〜11日（水）</strong><br><small style="color: var(--dq-yellow);">★外部依頼メール期限！</small></td>
+                <td><textarea id="sch-task-3" rows="2" placeholder="【超重要】外部施設・専門家への調査依頼メール送信（教員チェック後）">【超重要】外部施設・専門家への調査依頼メール送信（教員チェック後）</textarea></td>
+                <td><input type="text" id="sch-owner-3" placeholder="担当者"></td>
+                <td><input type="text" id="sch-goal-3" value="依頼メール送信完了" placeholder="完了の目安"></td>
+              </tr>
+              <tr>
+                <td><strong>11月25日（水）</strong><br><small>7限 グループ研究</small></td>
+                <td><textarea id="sch-task-4" rows="2" placeholder="アポ回答の確認、12/11一日活動日のタイムスケジュール詳細作成">アポ回答の確認、12/11一日活動日のタイムスケジュール詳細作成</textarea></td>
+                <td><input type="text" id="sch-owner-4" placeholder="担当者"></td>
+                <td><input type="text" id="sch-goal-4" value="一日活動日行動計画書" placeholder="完了の目安"></td>
+              </tr>
+              <tr>
+                <td><strong>12月 9日（水）</strong><br><small>4限 事前確認</small></td>
+                <td><textarea id="sch-task-5" rows="2" placeholder="前日最終確認（持ち物、交通機関、連絡体制、安全確認）">前日最終確認（持ち物、交通機関、連絡体制、安全確認）</textarea></td>
+                <td><input type="text" id="sch-owner-5" placeholder="担当者"></td>
+                <td><input type="text" id="sch-goal-5" value="しおり・確認シート" placeholder="完了の目安"></td>
+              </tr>
+              <tr>
+                <td><strong>12月11日（金）</strong><br><small style="color: var(--dq-green);">★1〜6限 一日活動日本番！</small></td>
+                <td><textarea id="sch-task-6" rows="2" placeholder="校外フィールドワーク・外部インタビュー・校内実験の実施">校外フィールドワーク・外部インタビュー・校内実験の実施</textarea></td>
+                <td><input type="text" id="sch-owner-6" value="全員" placeholder="担当者"></td>
+                <td><input type="text" id="sch-goal-6" value="記録写真・インタビュー音声・生データ回収" placeholder="完了の目安"></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ワークシート⑤に対応する詳細記述欄 -->
+        <div class="plan-detail-box">
+          <h4 style="color: var(--dq-gold); margin-bottom: 8px;">📝 行動計画の詳細メモ（ワークシート⑤に対応）</h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label for="plan-next-action" style="font-weight: bold; font-size: 0.88rem; color: #ddd;">Q1. まず今日から何をするか？（直近の活動）：</label>
+              <textarea id="plan-next-action" rows="3" style="width: 100%; background: #000; color: #fff; border: 1px solid #666; padding: 8px; border-radius: 4px; font: inherit;" placeholder="例: 週末に市立図書館で関連する文献を2冊借りる。"></textarea>
+            </div>
+            <div>
+              <label for="plan-lit-search" style="font-weight: bold; font-size: 0.88rem; color: #ddd;">Q2. どんな文献・調査が必要か？（丸投げ防止の事前調査）：</label>
+              <textarea id="plan-lit-search" rows="3" style="width: 100%; background: #000; color: #fff; border: 1px solid #666; padding: 8px; border-radius: 4px; font: inherit;" placeholder="例: 滋賀県の統計データ、商店街活性化の先行事例論文。"></textarea>
+            </div>
+            <div>
+              <label for="plan-roles" style="font-weight: bold; font-size: 0.88rem; color: #ddd;">Q3. グループ内の役割分担はどうするか？：</label>
+              <textarea id="plan-roles" rows="3" style="width: 100%; background: #000; color: #fff; border: 1px solid #666; padding: 8px; border-radius: 4px; font: inherit;" placeholder="例: A君：外部連絡・アポ担当、Bさん：アンケート作成、C君：データ集計。"></textarea>
+            </div>
+            <div>
+              <label for="plan-day-activity" style="font-weight: bold; font-size: 0.88rem; color: #ddd;">Q4. 12月11日（金）一日活動日は具体的にどこでどんなことをする？：</label>
+              <textarea id="plan-day-activity" rows="3" style="width: 100%; background: #000; color: #fff; border: 1px solid #666; padding: 8px; border-radius: 4px; font: inherit;" placeholder="例: 午前中は商店街事務所でインタビュー、午後は通行人30名にアンケート実施。"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <!-- ★新キャラクター：【時の軍師クロノス】（計画批評AI） -->
+        <div class="spell-card" style="margin-top: 16px; border-color: #f39c12;">
+          <div class="spell-header">
+            <span style="color: #f39c12;">🧙‍♂️【時の軍師クロノス】による計画の辛口批評プロンプト</span>
+            <span style="font-size: 0.8rem; color: #aaa;">MP消費: 1</span>
+          </div>
+          <p style="font-size: 0.85rem; color: #ccc; margin-bottom: 8px;">
+            作った工程表に「無理なスケジュール」「外部への失礼（直前アポ）」「バッファ不足」がないか、軍師に厳しく批評させよ！
+          </p>
+          <textarea class="prompt-box" id="chronos-prompt-text" rows="10">あなたは厳しい探究学習の進行アドバイザー「時の軍師クロノス」です。以下の私たちの調査工程表を厳しく点検し、実現可能性を批評してください。
+
+【私たちの工程表】
+・10月中の予定：[Q1・Q2の内容を入力]
+・外部連絡予定日：[11月4日〜11日頃]
+・12月11日（一日活動日）の予定：[Q4の内容を入力]
+・役割分担：[Q3の内容を入力]
+
+【批評基準】
+1. 外部への依頼時期（11月11日厳守）に無理はないか？直前アポになっていないか？
+2. 文献調査を行う時間が十分に確保されているか？
+3. 12月11日の本番調査で、雨天時や相手の都合がつかない場合の「予備計画（プランB）」があるか？
+危険な落とし穴を3点指摘し、より安全で確実な進め方をアドバイスしてください。</textarea>
+          <div class="spell-actions">
+            <button class="dq-btn dq-btn-primary" id="btn-copy-chronos" type="button">
+              📋 編集した軍師の批評プロンプトをコピー (-1 MP)
+            </button>
+            <button class="dq-btn" id="btn-reset-chronos" type="button" style="border-color: #3498db; color: #3498db;" title="初期ひな形に戻す">
+              🔄 ひな形に戻す
+            </button>
+            <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="dq-btn">
+              🌐 Geminiを開く (別タブ) ↗
+            </a>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; text-align: right;">
+          <button class="dq-btn dq-btn-primary" id="btn-save-schedule" type="button">
+            💾 工程表を保存して準備進捗に加算 (+1 EXP)
+          </button>
+        </div>
+      </div>
+
+      <!-- 画面下部ナビゲーション -->
+      <div style="display: flex; justify-content: space-between; margin-top: 16px;">
+        <button class="dq-btn js-prev-stage" data-prev="2" type="button">◀ 前に戻る</button>
+        <button class="dq-btn dq-btn-primary js-next-stage" data-next="4" type="button">
+          冒険の書へ記録する (Stage 4へ) ▶
+        </button>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         STAGE 4: ADVENTURE BOOK (REFLECTIVE LOG) (15分)
+         ======================================================================== -->
+    <section class="tab-pane" id="pane-stage-4" aria-labelledby="stage-4-title">
+
+      <div class="dq-box">
+        <div class="dq-box-header">
+          <span id="stage-4-title">【Stage 4】冒険の書！振り返りと次なる旅立ち (目安: 15分)</span>
+          <span class="badge badge-before">所要時間: 15分</span>
+        </div>
+
+        <p>本日のクエストお疲れ様であった！<br>
+        四天王と対峙し、鍛え直した君たちの探究の軌跡を「冒険の書」に記録せよ。</p>
+
+        <form id="adventure-book-form">
+          <div class="book-field">
+            <label for="student-profile">勇者パーティ名 / クラス・出席番号・氏名（全員分）:</label>
+            <input type="text" id="student-profile" required style="width: 100%; padding: 8px; background: #000; color: #fff; border: 2px solid #777; border-radius: 4px; font: inherit;" placeholder="例: 2年1組 12番 芹澤、15番 田中、28番 山田（チーム名: 彦根活性化隊）">
+          </div>
+
+          <div class="book-field">
+            <label for="book-q1">1. 本日、最も大きな変化・進歩を遂げた「自分たちの問いや計画」は何か？</label>
+            <textarea id="book-q1" required placeholder="例: 当初は『商店街を活性化したい』という曖昧な問いだったが、既知王と対峙して『若者が立ち寄らない理由を滞在時間から測定する』という具体的な問いに進化した。"></textarea>
+          </div>
+
+          <div class="book-field">
+            <label for="book-q2">2. AI（Gemini）を活用して良かった点、および鵜呑みにせず自分たちで判断した点は？</label>
+            <textarea id="book-q2" required placeholder="例: 質問項目の漏れを指摘してくれた点は大いに役立ったが、地域性（地元高校生のリアルな感覚）についてはAIの提案を採用せず、自分たちで修正した。"></textarea>
+          </div>
+
+          <div class="book-field">
+            <label for="book-q3">3. 次回（10月14日）までに各人が完了させておく「宿題・Next Action」は？</label>
+            <textarea id="book-q3" required placeholder="例: A君：先行研究論文の収集、Bさん：アンケート下書き、C君：教員への回議相談。"></textarea>
+          </div>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;">
+            <button type="submit" class="dq-btn dq-btn-primary">
+              📜 冒険の書を記録する (+1 EXP)
+            </button>
+            <button type="button" class="dq-btn" id="btn-print-summary" style="background: #27ae60; border-color: #2ecc71;">
+              🖨️ A4レポート印刷 / iPadでPDF保存
+            </button>
+            <button type="button" class="dq-btn" id="btn-copy-all-loilo">
+              📋 ロイロノート提出用テキスト一括コピー
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- 画面下部ナビゲーション -->
+      <div style="display: flex; justify-content: space-between; margin-top: 16px;">
+        <button class="dq-btn js-prev-stage" data-prev="3" type="button">◀ 前に戻る</button>
+        <span style="color: var(--dq-gold); font-weight: bold; align-self: center;">★ 全クエスト完了！お疲れ様でした！</span>
+      </div>
+    </section>
+
+    <!-- ========================================================================
+         STAGE 5: EXTRA STAGE: VIBE CODING (自作武器・調査ツール錬成の鍛冶屋)
+         ======================================================================== -->
+    <section class="tab-pane" id="pane-stage-5" aria-labelledby="stage-5-title">
+      <div class="dq-box" style="border-color: #9b59b6;">
+        <div class="dq-box-header" style="border-color: #9b59b6;">
+          <span id="stage-5-title" style="color: #e0b0ff;">⚔️【Extra Stage】鍛冶屋の試練：バイブコーディングで自作の武器（調査ツール）を錬成せよ！</span>
+          <span class="badge" style="background: #8e44ad; color: #fff;">探究拡張 / 自作ツール</span>
+        </div>
+
+        <p style="font-size: 0.95rem; line-height: 1.6;">
+          「既存のGoogleフォームや紙の正の字メモだけでは、自分たちが本当に集めたいリアルなデータが集まらない…」<br>
+          そんな時は、<strong>生成AIに日本語で指示を出して自分たち専用のWebアプリや計測ツールをその場で作る手法【バイブコーディング（Vibe Coding）】</strong>の出番だ！<br>
+          プログラミングの難しい文法を覚える必要は一切なし。言葉（バイブス・想い）でAIに伝えるだけで、スマホやiPadでサクサク動くオリジナルの調査ツールが完成するぞ。
+        </p>
+
+        <!-- 4つのリアルケース紹介 -->
+        <h3 style="color: var(--dq-gold); margin: 20px 0 10px; font-size: 1.05rem;">
+          🛠️ 先輩高校生の探究でも大活躍！バイブコーディングで作れる「4つの自作武器（ケース）」
+        </h3>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 20px;">
+          <!-- ケース1: 現場カウントアプリ -->
+          <div style="background: #111; border: 1px solid #9b59b6; border-radius: 6px; padding: 12px;">
+            <div style="color: #e0b0ff; font-weight: bold; margin-bottom: 4px;">
+              ① 【現場観察型】河瀬駅前・通行人＆危険箇所タップカウンター
+            </div>
+            <div style="font-size: 0.83rem; color: #ccc; margin-bottom: 6px;">
+              <strong>探究テーマ例:</strong> 「通学路の危険エリアの可視化」「時間帯別の駅前歩行者数」
+            </div>
+            <div style="font-size: 0.8rem; color: #aaa; line-height: 1.4;">
+              画面に「🚶 歩行者」「🚲 自転車」「⚠️ ニアミス」の巨大ボタンが並び、タップするだけで時刻とカウントを自動記録し、ワンクリックでCSVダウンロードできるスマホ用ツール。手書きの正の字集計とはおさらば！
+            </div>
+          </div>
+
+          <!-- ケース2: 反応時間・集中力テスト -->
+          <div style="background: #111; border: 1px solid #9b59b6; border-radius: 6px; padding: 12px;">
+            <div style="color: #e0b0ff; font-weight: bold; margin-bottom: 4px;">
+              ② 【比較検証型】睡眠時間×集中力測定シミュレーター
+            </div>
+            <div style="font-size: 0.83rem; color: #ccc; margin-bottom: 6px;">
+              <strong>探究テーマ例:</strong> 「睡眠時間や昼寝が午後の学習効率に与える影響」
+            </div>
+            <div style="font-size: 0.8rem; color: #aaa; line-height: 1.4;">
+              画面の色が変わったら即タップする「反射神経測定」や、簡単な10問計算テストをブラウザで実施。反応時間（ミリ秒）と正解率を自動算出して記録し、条件比較を客観的数値で検証できる！
+            </div>
+          </div>
+
+          <!-- ケース3: 心理テスト風アンケート -->
+          <div style="background: #111; border: 1px solid #9b59b6; border-radius: 6px; padding: 12px;">
+            <div style="color: #e0b0ff; font-weight: bold; margin-bottom: 4px;">
+              ③ 【アンケート型】高校生の生活リズム・タイプ別診断チャート
+            </div>
+            <div style="font-size: 0.83rem; color: #ccc; margin-bottom: 6px;">
+              <strong>探究テーマ例:</strong> 「高校生が楽しみながら回答してくれるアンケート回収率の向上」
+            </div>
+            <div style="font-size: 0.8rem; color: #aaa; line-height: 1.4;">
+              Googleフォームだと「面倒だから答えない」と言われがち…そこで、5問の質問に答えると「夜型フクロウ型」「朝型ライオン型」などのキャラクター診断結果が表示されるWebツール。楽しく回答が集まる！
+            </div>
+          </div>
+
+          <!-- ケース4: 地域魅力クイズ -->
+          <div style="background: #111; border: 1px solid #9b59b6; border-radius: 6px; padding: 12px;">
+            <div style="color: #e0b0ff; font-weight: bold; margin-bottom: 4px;">
+              ④ 【実証実験型】河瀬・彦根の伝統文化クイズ＆魅力度チェッカー
+            </div>
+            <div style="font-size: 0.83rem; color: #ccc; margin-bottom: 6px;">
+              <strong>探究テーマ例:</strong> 「若年層の地域文化認知度と、クイズによる関心向上効果の検証」
+            </div>
+            <div style="font-size: 0.8rem; color: #aaa; line-height: 1.4;">
+              地元の歴史や工芸に関する3択クイズを解くと、最後に詳しい解説とクーポン・マップが表示される体験型Webアプリ。クイズの正答率や感想を自動集計！
+            </div>
+          </div>
+        </div>
+
+        <!-- 3ステップ進行ガイド -->
+        <h3 style="color: var(--dq-gold); margin: 20px 0 10px; font-size: 1.05rem;">
+          🚀 高校生のためのバイブコーディング 3ステップ（自作武器の作り方）
+        </h3>
+
+        <div style="background: rgba(0, 0, 0, 0.6); border: 1px solid #444; border-radius: 6px; padding: 14px; margin-bottom: 20px;">
+          <div style="margin-bottom: 12px;">
+            <strong style="color: var(--dq-yellow);">【STEP 1: 武器の設計図（やりたいこと）を日本語で言語化する】</strong><br>
+            <span style="font-size: 0.85rem; color: #bbb;">
+              「誰が使うか（自分たち or 一般の生徒）」「どんなボタンや表示がいるか」「結果をどう保存・表示したいか」を箇条書きで整理する。
+            </span>
+          </div>
+
+          <div style="margin-bottom: 12px;">
+            <strong style="color: var(--dq-yellow);">【STEP 2: Geminiに錬成の呪文（プロンプト）を唱える】</strong><br>
+            <span style="font-size: 0.85rem; color: #bbb;">
+              下のひな形を使って、「HTML 1枚（HTML+CSS+JavaScript完結）で動くWebアプリのコードを書いてください」と指示する。
+            </span>
+          </div>
+
+          <div>
+            <strong style="color: var(--dq-yellow);">【STEP 3: プレビューまたはブラウザで動かして試す】</strong><br>
+            <span style="font-size: 0.85rem; color: #bbb;">
+              Geminiがコードを出力したら、ClaudeのArtifacts機能やCodePen、またはPCのメモ帳に貼り付けて <code>tool.html</code> として保存しブラウザでダブルクリック！動かなければ「〇〇が動かないから直して」とAIに言うだけで即座に修正してくれます。
+            </span>
+          </div>
+        </div>
+
+        <!-- 錬成プロンプトひな形 -->
+        <div style="background: #000; border: 1px solid #9b59b6; border-radius: 6px; padding: 14px; margin-bottom: 20px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="color: #e0b0ff; font-weight: bold;">🔮【自作武器錬成呪文】Gemini用バイブコーディング・プロンプト</span>
+            <span style="font-size: 0.8rem; color: #aaa;">MP消費: 1</span>
+          </div>
+          <p style="font-size: 0.82rem; color: #ccc; margin-bottom: 6px;">
+            下の枠内の <strong>[作りたいツールのアイデア]</strong> を自分たちの探究に合わせて書き換えてからコピーしよう！
+          </p>
+          <textarea class="prompt-box" id="vibe-prompt-text" rows="10">あなたは高校生の探究学習を支援する優秀なフロントエンドエンジニアです。
+高校生が外部調査・実証実験で実際に使用する、以下の条件のWebツール（HTML1枚完結）を作成してください。
+
+【私たちが作りたいツールのアイデア】
+・ツールの用途: [例: 河瀬駅前で歩行者と自転車の交通量をカウントする計測ツール]
+・主なターゲット: [例: 調査を行う高校生自身（スマートフォンで片手操作）]
+・欲しい機能:
+  1. [例: 画面上の「歩行者」「自転車」「危険ニアミス」ボタンをタップすると数字が+1される]
+  2. [例: 誤タップ防止の「-1（取り消し）」ボタン]
+  3. [例: 計測終了後に「CSV出力」または「テキストコピー」できる機能]
+・デザインの要望: [例: スマホで見やすく、押しやすい大きなボタン]
+
+【技術的要件】
+・外部ライブラリを使わず、単一のHTMLファイル（インラインCSS、JavaScript）のみで完結させてください。
+・スマートフォン（Safari / Chrome）およびiPadで確実にタップして動作するレスポンシブデザインにしてください。
+・高校生がコードをコピーしてブラウザで開くだけで即座に使えるようにしてください。</textarea>
+
+          <div class="spell-actions">
+            <button class="dq-btn dq-btn-primary" id="btn-copy-vibe" type="button" style="border-color: #9b59b6; background: #8e44ad;">
+              📋 編集した錬成プロンプトをコピー (-1 MP)
+            </button>
+            <button class="dq-btn" id="btn-reset-vibe" type="button" style="border-color: #3498db; color: #3498db;" title="初期ひな形に戻す">
+              🔄 ひな形に戻す
+            </button>
+            <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="dq-btn">
+              🌐 Geminiを開く (別タブ) ↗
+            </a>
+          </div>
+        </div>
+
+        <!-- 自作ツールのアイデアメモ枠 -->
+        <div style="background: #111; border: 1px solid #777; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+          <label for="extra-tool-memo" style="color: #e0b0ff; font-weight: bold; display: block; margin-bottom: 6px;">
+            ✍️ 私たちが自作したいツール（武器）のアイデア・検討メモ（A4レポートに反映されます）：
+          </label>
+          <textarea id="extra-tool-memo" style="width: 100%; min-height: 80px; background: #000; color: #fff; border: 1px solid #555; padding: 8px; border-radius: 4px; font: inherit;" placeholder="例: 河瀬駅前の踏切付近で、朝8:00〜8:30の間に自転車が歩行者の何cm以内を通過したかを3段階（安全・注意・危険）で記録するタップカウンターを作成予定。"></textarea>
+        </div>
+
+        <!-- 戻るボタン -->
+        <div style="display: flex; justify-content: space-between; margin-top: 16px;">
+          <button class="dq-btn js-goto-stage" data-stage="1" type="button">◀ Stage 1（3つの武器）に戻る</button>
+          <button class="dq-btn dq-btn-primary js-goto-stage" data-stage="2" type="button">
+            四天王の待つバトルアリーナへ (Stage 2へ) ▶
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ==========================================================================
+       PRINT-ONLY A4 REPORT SHEET (印刷時のみ表示される提出用完全シート)
+       ========================================================================== -->
+  <section class="print-report-sheet" id="print-report-sheet" aria-hidden="true">
+    <div class="print-page">
+      <div class="print-header">
+        <div>
+          <div class="print-title">高校2年生 総合的な探究の時間 外部調査企画レポート</div>
+          <div style="font-size: 11pt; color: #555;">〜四天王クエスト完遂の書・ブラッシュアップ記録〜</div>
+        </div>
+        <div class="print-meta">
+          <div>実施日: 2026年9月30日（水）</div>
+          <div id="print-report-author" style="font-weight: bold; margin-top: 4px;">提出者: （未記入）</div>
+        </div>
+      </div>
+
+      <!-- 第1章: 武器選択 -->
+      <div class="print-sec">
+        <div class="print-sec-title">【Stage 1】選択した調査手法の型（3つの武器）</div>
+        <div style="margin-bottom: 4px;"><strong>選択した型:</strong> <span id="print-weapon-name">未選択</span></div>
+        <div class="print-label">選定理由・検証したいこと:</div>
+        <div class="print-text" id="print-weapon-memo">（未記入）</div>
+      </div>
+
+      <!-- 第2章: 四天王判定記録 (4体全員分一覧) -->
+      <div class="print-sec">
+        <div class="print-sec-title">【Stage 2】四天王との対話・ルーブリック判定記録（全4体）</div>
+        <div id="print-bosses-container">
+          <!-- JSで4体分を自動展開 -->
+        </div>
+      </div>
+    </div>
+
+    <div class="print-page">
+      <!-- 第3章: 旅の工程表 -->
+      <div class="print-sec">
+        <div class="print-sec-title">【Stage 3】10月〜12月のアクションプラン（旅の工程表）</div>
+        <table class="print-table">
+          <thead>
+            <tr>
+              <th style="width: 20%;">実施日・時期</th>
+              <th style="width: 40%;">やること・アクション</th>
+              <th style="width: 18%;">担当者</th>
+              <th style="width: 22%;">完了条件（成果物）</th>
+            </tr>
+          </thead>
+          <tbody id="print-schedule-tbody">
+            <!-- JSで自動展開 -->
+          </tbody>
+        </table>
+
+        <div style="margin-top: 10px; font-size: 9pt;">
+          <strong>行動計画詳細:</strong><br>
+          ・直近の行動: <span id="print-plan-next">—</span><br>
+          ・事前文献調査: <span id="print-plan-lit">—</span><br>
+          ・役割分担: <span id="print-plan-roles">—</span><br>
+          ・12/11一日活動日の予定: <span id="print-plan-day">—</span>
+        </div>
+      </div>
+
+      <!-- 第4章: 冒険の書 -->
+      <div class="print-sec" style="margin-top: 16px;">
+        <div class="print-sec-title">【Stage 4】冒険の書（自己評価と振り返り）</div>
+        <div class="print-label">1. 最も大きな変化・進歩を遂げた「自分たちの問いや計画」:</div>
+        <div class="print-text" id="print-book-q1">（未記入）</div>
+
+        <div class="print-label">2. AI（Gemini）を活用して良かった点・鵜呑みにせず判断した点:</div>
+        <div class="print-text" id="print-book-q2">（未記入）</div>
+
+        <div class="print-label">3. 次回（10月14日）までに各人が完了させておく「宿題・Next Action」:</div>
+        <div class="print-text" id="print-book-q3">（未記入）</div>
+      </div>
+
+      <div style="margin-top: 20px; border-top: 1px dashed #777; padding-top: 6px; font-size: 8.5pt; color: #666; text-align: right;">
+        滋賀県立河瀬高等学校 総合的な探究の時間 外部調査企画シート原本
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================================================
+       BOTTOM FIXED COMMAND BAR (たたかう, じゅもん, どうぐ, にげる, さくせん)
+       ========================================================================== -->
+  <footer class="command-bar" aria-label="ドラクエ風コマンドバー">
+    <div class="command-grid">
+      <button class="cmd-btn" id="cmd-fight" type="button">
+        <span class="cmd-cursor">▶</span>
+        <span>⚔️ たたかう</span>
+      </button>
+      <button class="cmd-btn" id="cmd-spell" type="button">
+        <span class="cmd-cursor">▶</span>
+        <span>✨ じゅもん</span>
+      </button>
+      <button class="cmd-btn" id="cmd-item" type="button">
+        <span class="cmd-cursor">▶</span>
+        <span>🎒 どうぐ</span>
+      </button>
+      <button class="cmd-btn" id="cmd-escape" type="button">
+        <span class="cmd-cursor">▶</span>
+        <span>🏃 にげる</span>
+      </button>
+      <button class="cmd-btn" id="cmd-tactic" type="button">
+        <span class="cmd-cursor">▶</span>
+        <span>📜 さくせん</span>
+      </button>
+    </div>
+  </footer>
+
+  <!-- ==========================================================================
+       MODAL DIALOGS
+       ========================================================================== -->
+  <!-- じゅもんモーダル (Geminiプロンプト集) -->
+  <div class="modal-overlay" id="modal-spells" role="dialog" aria-modal="true" aria-labelledby="modal-spells-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <span id="modal-spells-title">✨ 探究を加速する5大呪文（Geminiプロンプト集）</span>
+        <button class="modal-close-btn js-close-modal" type="button" aria-label="閉じる">✕</button>
+      </div>
+      <p style="font-size: 0.9rem; color: #ddd; margin-bottom: 12px;">
+        ワンクリックでコピーしてGeminiに唱えよ！（MP残枠を意識して活用せよ）
+      </p>
+
+      <!-- 呪文1 -->
+      <div class="spell-card">
+        <div class="spell-header">
+          <span>呪文①: 【カイシンのイチゲキ】問いの研磨プロンプト</span>
+        </div>
+        <div class="prompt-box">私たちの探究の問いは「[自分たちの問い]」です。この問いを「高校生が半年で検証可能」かつ「独自性がある」形にするため、前提条件を絞り込むための3つの切り口を提示してください。</div>
+        <button class="dq-btn js-copy-text" data-text="私たちの探究の問いは「[自分たちの問い]」です。この問いを「高校生が半年で検証可能」かつ「独自性がある」形にするため、前提条件を絞り込むための3つの切り口を提示してください。" type="button">
+          📋 呪文をコピー (-1 MP)
+        </button>
+      </div>
+
+      <!-- 呪文2 -->
+      <div class="spell-card">
+        <div class="spell-header">
+          <span>呪文②: 【ミナディン】多角的視点（反論・ステークホルダー）</span>
+        </div>
+        <div class="prompt-box">私たちは「[解決策や仮説]」を提案しようとしています。この提案に対して、(1)地域住民、(2)商店主、(3)行政の立場から、それぞれどのような懸念や反対意見が予想されるか、意地悪な視点で指摘してください。</div>
+        <button class="dq-btn js-copy-text" data-text="私たちは「[解決策や仮説]」を提案しようとしています。この提案に対して、(1)地域住民、(2)商店主、(3)行政の立場から、それぞれどのような懸念や反対意見が予想されるか、意地悪な視点で指摘してください。" type="button">
+          📋 呪文をコピー (-1 MP)
+        </button>
+      </div>
+
+      <!-- 呪文3 -->
+      <div class="spell-card">
+        <div class="spell-header">
+          <span>呪文③: 【ルカナン】先行調査の壁破壊（既知情報の整理）</span>
+        </div>
+        <div class="prompt-box">「[自分たちのテーマ]」について、すでに先行研究や他自治体で実証されている定番の事実を3つ挙げてください。その上で、まだあまり検証されていない「高校生が調べる価値のある盲点」を1つ教えてください。</div>
+        <button class="dq-btn js-copy-text" data-text="「[自分たちのテーマ]」について、すでに先行研究や他自治体で実証されている定番の事実を3つ挙げてください。その上で、まだあまり検証されていない「高校生が調べる価値のある盲点」を1つ教えてください。" type="button">
+          📋 呪文をコピー (-1 MP)
+        </button>
+      </div>
+
+      <div style="text-align: right; margin-top: 16px;">
+        <button class="dq-btn js-close-modal" type="button">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- どうぐモーダル (ワークシート・テンプレート・外部リンク) -->
+  <div class="modal-overlay" id="modal-items" role="dialog" aria-modal="true" aria-labelledby="modal-items-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <span id="modal-items-title">🎒 冒険の道具袋（学習リソース・リンク）</span>
+        <button class="modal-close-btn js-close-modal" type="button" aria-label="閉じる">✕</button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <div class="dq-box" style="margin-bottom: 0;">
+          <h4 style="color: var(--dq-gold);">📄 手元のワークシート④（前回の授業で記入済み）</h4>
+          <p style="font-size: 0.88rem; line-height: 1.6; color: #ddd;">
+            前回の授業で記入したワークシートを手元に用意してください。<br>
+            そこに書かれた<strong>「探究の問い」「仮説」「調べたいこと」</strong>を、Geminiの呪文プロンプトに流し込んで四天王と対決します。
+          </p>
+        </div>
+
+        <div class="dq-box" style="margin-bottom: 0;">
+          <h4 style="color: var(--dq-gold);">🌐 外部連携・調査ツールリンク</h4>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px;">
+            <a href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer" class="dq-btn">
+              Gemini起動 ↗
+            </a>
+            <a href="https://resas.go.jp/" target="_blank" rel="noopener noreferrer" class="dq-btn">
+              RESAS（地域経済分析） ↗
+            </a>
+            <a href="https://crd.ndl.go.jp/reference/" target="_blank" rel="noopener noreferrer" class="dq-btn">
+              レファレンス協同データベース ↗
+            </a>
+          </div>
+        </div>
+      </div>
+      <div style="text-align: right; margin-top: 16px;">
+        <button class="dq-btn js-close-modal" type="button">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- さくせんモーダル (進行心得 & ルール) -->
+  <div class="modal-overlay" id="modal-tactics" role="dialog" aria-modal="true" aria-labelledby="modal-tactics-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <span id="modal-tactics-title">📜 冒険の作戦（ソウタンの心得）</span>
+        <button class="modal-close-btn js-close-modal" type="button" aria-label="閉じる">✕</button>
+      </div>
+      <ul style="padding-left: 20px; line-height: 1.8; font-size: 0.95rem;">
+        <li><strong>作戦①: いのちだいじに（学校手続の遵守）</strong><br>
+        外部機関へのアポイント依頼メールは<strong>11月11日（修学旅行前）が最終期限</strong>！必ず先生の確認を経てから送ること。直前の依頼は失礼にあたります。</li>
+        <li><strong>作戦②: ガンガンいこうぜ（AIへの反論）</strong><br>
+        Geminiの回答を鵜呑みにするな！「いや、ここに書いてある」と堂々と異議を唱えよ。</li>
+        <li><strong>作戦③: バッチリがんばれ（役割分担）</strong><br>
+        グループ内でプロンプト入力係、記録係、時間管理係を明確にして協力せよ。</li>
+        <li><strong>作戦④: じゅもんをつかうな（自力思考）</strong><br>
+        AIに丸投げする前に、まず白紙の状態で自分たちの仮説を1行書け。</li>
+      </ul>
+      <div style="text-align: right; margin-top: 16px;">
+        <button class="dq-btn js-close-modal" type="button">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- iPad向けPDF保存ガイダンスモーダル -->
+  <div class="modal-overlay" id="modal-pdf-guide" role="dialog" aria-modal="true" aria-labelledby="modal-pdf-guide-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <span id="modal-pdf-guide-title">📱 iPadでのPDF保存・提出ガイド</span>
+        <button class="modal-close-btn js-close-modal" type="button" aria-label="閉じる">✕</button>
+      </div>
+      <div style="font-size: 0.95rem; line-height: 1.8;">
+        <p><strong>iPad（Safari）で綺麗にPDF保存する3ステップ：</strong></p>
+        <ol style="padding-left: 24px; margin: 10px 0;">
+          <li>下の<strong>「プリント画面を開く」</strong>をタップします。</li>
+          <li>表示された印刷プレビュー画面で、用紙プレビューを<strong>2本指でピンチアウト（外側に広げる）</strong>します。</li>
+          <li>全画面PDFが表示されるので、右上の<strong>共有ボタン（四角と上矢印 ⎋）</strong>をタップし、<strong>「ファイルに保存」</strong>または<strong>「ロイロノート」</strong>を選択してください！</li>
+        </ol>
+
+        <div style="background: #111a2e; border: 1px solid var(--dq-blue); padding: 10px; border-radius: 6px; margin: 12px 0; font-size: 0.85rem;">
+          💡 <strong>ロイロノートへ直接テキスト提出したい場合:</strong><br>
+          「ロイロ提出用テキスト一括コピー」を押すと、全入力内容がクリップボードに入ります。ロイロノートのカードにそのまま貼り付け可能です。
+        </div>
+
+        <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap;">
+          <button class="dq-btn" id="btn-modal-copy-text" type="button">
+            📋 テキストを一括コピー
+          </button>
+          <button class="dq-btn dq-btn-primary" id="btn-modal-trigger-print" type="button">
+            🖨️ プリント画面を開く
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知領域 -->
+  <div class="exp-toast" id="exp-toast" role="status" aria-live="polite"></div>
+
+  <!-- ==========================================================================
+       CLIENT APPLICATION SCRIPT
+       ======================================================================== */
+  -->
+  <script>
+    /* ========================================================================
+       STATE MANAGEMENT & LOCAL STORAGE PERSISTENCE (MP=10)
+       ======================================================================== */
+    const STORAGE_KEY = "kawase_sotan_quest_v2_20260930";
+
+    const lessonState = {
+      totalSeconds: 90 * 60,
+      remainingSeconds: 90 * 60,
+      timerId: null,
+      soundEnabled: true,
+      mp: 10,
+      maxMp: 10,
+      stage3Announced: false,
+      currentBossId: 1,
+      // 四天王4体の判定記録（個別保持・初期状態はすべてbefore）
+      bossRecords: {
+        1: { evidence: "", met: "", gap: "", next: "", status: "before" },
+        2: { evidence: "", met: "", gap: "", next: "", status: "before" },
+        3: { evidence: "", met: "", gap: "", next: "", status: "before" },
+        4: { evidence: "", met: "", gap: "", next: "", status: "before" }
+      },
+      // 生徒が編集可能な各ボスのプロンプト保持
+      customPrompts: {
+        1: "",
+        2: "",
+        3: "",
+        4: ""
+      },
+      // 準備進捗 6項目管理 (四天王4体 + 工程表 + 冒険の書)
+      preparationState: {
+        boss1: false,
+        boss2: false,
+        boss3: false,
+        boss4: false,
+        schedule: false,
+        book: false
+      }
+    };
+
+    // ボス設定（★PDFスキャン資料の固定ルーブリックに完全準拠）
+    const bossData = {
+      1: {
+        name: "① 曖昧王（あいまいおう）",
+        sprite: "sprite-ambiguous-king",
+        catchphrase: "「お前たちの問いは霧のようだ！何を言いたいのかサッパリわからんな！」",
+        weakness: "弱点: どんなデータを集めればよいか具体的にイメージできる問い（「はい／いいえ」だけで終わらない問い）",
+        spellTitle: "✨ 対曖昧王 詠唱プロンプト（問いの焦点化・測定可能性ルーブリック）",
+        spellPrompt: `あなたは高校生の探究学習を導く厳格な審査官「曖昧王」です。
+以下の私たちの「問い」と企画案を読み、河瀬高校の探究固定ルーブリックに照らして厳しく審査してください。
+
+【私たちの探究の問い】：[問いを入力]
+【調べたい仮説】：[仮説を入力]
+【集めたいデータ】：[学校内での観察・比較・アンケート・実験など]
+
+【固定ルーブリック審査基準】
+1. 「はい／いいえ」だけで答えられない、探究しがいのある問いになっているか？
+2. どんなデータを集めれば答えを確かめられるか、測定指標が具体的にイメージできるか？
+3. 抽象的な言葉（例：「環境問題」「活性化」）が、身近な具体的行動に分解されているか？
+
+【出力形式】
+・判定：【撃破（合格）】または【再挑戦（要修正）】
+・満たしている点（具体的に）：
+・足りない曖昧な点（3点）：
+・曖昧さを打破する改善案（具体的な問いの書き直し例）：`,
+        allowUnverified: false
+      },
+      2: {
+        name: "② 既知王（きちおう）",
+        sprite: "sprite-known-king",
+        catchphrase: "「フハハ！そんなこと、Googleで3分検索すれば小学生でもわかるぞ！」",
+        weakness: "弱点: ネット検索で答えが出ない、自分たちで足を使って確かめる一次データ",
+        spellTitle: "✨ 対既知王 詠唱プロンプト（先行調査・独自性ルーブリック）",
+        spellPrompt: `あなたは探究学習の審査官「既知王」です。
+以下の私たちの問いを審査し、「ネットや本を調べればすでに答えが載っている常識ではないか」を厳しく判定してください。
+
+【私たちの探究の問い】：[問いを入力]
+【自分たちで確かめたいこと】：[入力]
+
+【固定ルーブリック審査基準】
+1. インターネットで検索するだけで答えが出てしまう「調べ学習」になっていないか？
+2. 「文献や論文を調べて終わり」ではなく、「自分たちの手で確かめる」独自性があるか？
+3. 世の中の常識をなぞるだけでなく、「高校生の視点だからこそ検証する意味」があるか？
+
+【出力形式】
+・判定：【撃破（合格）】または【再挑戦（要修正）】
+・世の中で既に判明している既知の結論（ズバッと指摘）：
+・私たちが現場で直接調べる価値のある「まだ誰も検証していない盲点・新しい切り口」：`,
+        allowUnverified: true
+      },
+      3: {
+        name: "③ 丸投げ王（まるなげおう）",
+        sprite: "sprite-delegation-king",
+        catchphrase: "「専門家に『どうすればいいですか？』と丸投げする気配がプンプンするぞ！」",
+        weakness: "弱点: 11/11までの事前メール、文献調査済みの仮説持参、相手への敬意",
+        spellTitle: "✨ 対丸投げ王 詠唱プロンプト（自己負担・マナー・11/11期限ルーブリック）",
+        spellPrompt: `あなたは探究学習の審査官「丸投げ王」です。
+私たちが外部の専門家や施設に調査・インタビューを依頼する計画を厳しく審査してください。
+
+【インタビュー・調査相手】：[施設名・企業・専門家]
+【依頼予定の時期】：[※11月4日〜11日頃に依頼メール送信予定]
+【事前に調べておく文献・本】：[読んだ本や論文]
+【相手に聞きたい質問】：[質問リスト]
+
+【固定ルーブリック審査基準】
+1. インタビューしなくても本やネットを調べればわかることを、相手に丸投げして聞いていないか？
+2. 依頼メールは11月11日（修学旅行前）までに余裕を持って送る計画になっているか？（直前依頼の禁止）
+3. 相手に「答え」を求めず、自分たちの仮説を持って「検証」をお願いする姿勢になっているか？
+
+【出力形式】
+・判定：【撃破（合格）】または【再挑戦（要修正）】
+・丸投げと見なされる危険な質問箇所の指摘：
+・専門家に対して失礼にならず、相手が喜んで答えたくなる具体的な質問への改善案：`,
+        allowUnverified: true
+      },
+      4: {
+        name: "④ 空論王（くうろんおう）",
+        sprite: "sprite-theory-king",
+        catchphrase: "「百万人の署名を集めるだと？高校生のお前たちにどうやって実現できるのだ！」",
+        weakness: "弱点: 12月11日の一日活動日に身近な範囲で検証できるミニマム実験（MVP）",
+        spellTitle: "✨ 対空論王 詠唱プロンプト（12/11一日活動日の実現可能性ルーブリック）",
+        spellPrompt: `あなたは探究学習の審査官「空論王」です。
+私たちが12月11日（金）の「一日活動日」に向けて計画している調査・実験計画の実現可能性を厳しく審査してください。
+
+【私たちの検証計画】：[計画内容]
+【実施場所・対象】：[校内、彦根市内、商店街など]
+【必要な時間と人数】：[12月11日 1〜6限の範囲内]
+
+【固定ルーブリック審査基準】
+1. 高校生の活動期間（12月11日）と予算の中で、物理的に実現可能な計画か？
+2. 大風呂敷を広げすぎて、一日でデータが集まらず破綻するリスクはないか？
+3. 学校の中や身近な10人〜30人で小さく試せる「身の回りの確かめられる問い」に落とし込めているか？
+
+【出力形式】
+・判定：【撃破（合格）】または【再挑戦（要修正）】
+・実現不可能・危険と思われる大風呂敷の指摘：
+・クオリティを落とさずに、12月11日の一日で確実に検証できる「縮小版（MVP）」のアイデア：`,
+        allowUnverified: true
+      }
+    };
+
+    // 判定状態の表示設定
+    const statusPresentation = {
+      before: { text: "挑戦前", className: "badge-before", symbol: "○" },
+      clear: { text: "撃破", className: "badge-clear", symbol: "✓" },
+      retry: { text: "再挑戦", className: "badge-retry", symbol: "↻" },
+      unverified: { text: "資料未確認", className: "badge-unverified", symbol: "?" }
+    };
+
+    // 異議申立てテンプレート
+    const appealTemplate = `【AI判定への異議申立て】
+対象の王：
+AIの判定：
+異議のある点：
+自分たちの記述の該当箇所：
+固定ルーブリックの該当条件：
+再確認してほしいこと：`;
+
+    /* ========================================================================
+       WEB AUDIO API SYNTHESIZER (8bit レトロゲーム効果音 バリエーション豊富化)
+       ======================================================================== */
+    let audioCtx = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playBeep(type = "click") {
+      if (!lessonState.soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        const now = ctx.currentTime;
+
+        if (type === "click") {
+          // 1. コマンド決定音（ピピッ）
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "square";
+          osc.frequency.setValueAtTime(800, now);
+          osc.frequency.setValueAtTime(1600, now + 0.035);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.08);
+
+        } else if (type === "magic" || type === "spell") {
+          // 2. 魔法・呪文詠唱音（ドラクエ風ピロリロリロリロ〜ン♪）
+          const notes = [440, 554.37, 659.25, 880, 1108.73, 1318.51, 1760, 2217.46];
+          const step = 0.025;
+          notes.forEach((freq, idx) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(freq, now + idx * step);
+            osc.frequency.exponentialRampToValueAtTime(freq * 1.08, now + idx * step + step);
+            gain.gain.setValueAtTime(0.12, now + idx * step);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * step + step * 2.5);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + idx * step);
+            osc.stop(now + idx * step + step * 2.5);
+          });
+
+        } else if (type === "levelup" || type === "clear") {
+          // 3. レベルアップ音（ドラクエ風 テレレレッテッテッテー♪）
+          const fanNotes = [
+            { f: 392.00, d: 0.07, t: 0.00 }, // G4
+            { f: 392.00, d: 0.07, t: 0.08 }, // G4
+            { f: 392.00, d: 0.07, t: 0.16 }, // G4
+            { f: 392.00, d: 0.14, t: 0.24 }, // G4 (少し長め)
+            { f: 415.30, d: 0.14, t: 0.40 }, // G#4
+            { f: 466.16, d: 0.14, t: 0.56 }, // A#4
+            { f: 523.25, d: 0.50, t: 0.72 }  // C5 (決めポーズ)
+          ];
+          fanNotes.forEach(n => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "square";
+            osc.frequency.setValueAtTime(n.f, now + n.t);
+            gain.gain.setValueAtTime(0.14, now + n.t);
+            gain.gain.setValueAtTime(0.14, now + n.t + n.d - 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + n.t + n.d);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + n.t);
+            osc.stop(now + n.t + n.d);
+          });
+
+        } else if (type === "attack") {
+          // 4. こうげき・反論音（ザシュッ！）
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(600, now);
+          osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.14);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.14);
+
+        } else if (type === "judge") {
+          // 5. 審判者（大賢者）召喚音（ゴォォン＋神聖な和音）
+          const chord = [261.63, 329.63, 392.00, 523.25];
+          chord.forEach(freq => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(0.08, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.7);
+          });
+
+        } else if (type === "save") {
+          // 6. 記録セーブ音（ピピッ・ポロン♪）
+          const notes = [523.25, 659.25, 783.99];
+          notes.forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "square";
+            osc.frequency.setValueAtTime(f, now + i * 0.05);
+            gain.gain.setValueAtTime(0.09, now + i * 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.08);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + i * 0.05);
+            osc.stop(now + i * 0.05 + 0.08);
+          });
+
+        } else if (type === "open") {
+          // 7. モーダル展開音（カチャッ・ピロリン♪）
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(587.33, now);
+          osc.frequency.setValueAtTime(880, now + 0.05);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.12);
+
+        } else if (type === "close") {
+          // 8. モーダル閉じる音（ピピッ）
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(880, now);
+          osc.frequency.setValueAtTime(587.33, now + 0.04);
+          gain.gain.setValueAtTime(0.08, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.08);
+
+        } else if (type === "escape") {
+          // 9. にげる失敗音（ポロロロ…ブッ）
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(400, now);
+          osc.frequency.linearRampToValueAtTime(150, now + 0.25);
+          gain.gain.setValueAtTime(0.12, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.28);
+
+        } else if (type === "warning") {
+          // 10. 警告ブザー（ブブー）
+          [0, 0.12].forEach(t => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sawtooth";
+            osc.frequency.setValueAtTime(160, now + t);
+            gain.gain.setValueAtTime(0.12, now + t);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + t + 0.09);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(now + t);
+            osc.stop(now + t + 0.09);
+          });
+        }
+      } catch (e) {
+        console.warn("Audio playback not allowed:", e);
+      }
+    }
+
+    /* ========================================================================
+       RENDER & PROGRESS FUNCTIONS (全6件管理)
+       ======================================================================== */
+    function updateProgress() {
+      const count = Object.values(lessonState.preparationState).filter(Boolean).length;
+      const meter = document.getElementById("progress-meter");
+      const gauge = document.getElementById("exp-gauge");
+      const text = document.getElementById("exp-text");
+
+      if (meter && gauge && text) {
+        const percent = Math.min(100, (count / 6) * 100);
+        meter.setAttribute("aria-valuenow", String(count));
+        meter.setAttribute("aria-valuetext", `準備記録6件中${count}件`);
+        gauge.style.width = `${percent}%`;
+        text.textContent = `${count} / 6 記録`;
+      }
+      saveToStorage();
+    }
+
+    function renderTime() {
+      const gauge = document.getElementById("hp-gauge");
+      const text = document.getElementById("hp-text");
+      if (!gauge || !text) return;
+
+      const remaining = lessonState.remainingSeconds;
+      const minutes = Math.floor(remaining / 60);
+      const seconds = remaining % 60;
+      const percent = Math.max(0, Math.min(100, (remaining / lessonState.totalSeconds) * 100));
+
+      gauge.style.width = `${percent}%`;
+      gauge.classList.toggle("is-low", percent <= 20);
+      text.textContent = `${minutes}:${String(seconds).padStart(2, "0")}`;
+    }
+
+    function renderMp() {
+      const meter = document.getElementById("mp-meter");
+      const gauge = document.getElementById("mp-gauge");
+      const text = document.getElementById("mp-text");
+      if (!meter || !gauge || !text) return;
+
+      const percent = (lessonState.mp / lessonState.maxMp) * 100;
+      meter.setAttribute("aria-valuenow", String(lessonState.mp));
+      meter.setAttribute("aria-valuetext", `じゅもん残り${lessonState.mp}回`);
+      gauge.style.width = `${percent}%`;
+      text.textContent = `MP ${lessonState.mp} / ${lessonState.maxMp}`;
+    }
+
+    function consumeMp() {
+      if (lessonState.mp > 0) {
+        lessonState.mp -= 1;
+        renderMp();
+        playBeep("magic");
+        if (lessonState.mp === 0) {
+          showToast("MPをすべて消費しました！以降も教員見本ルート等で継続可能です。");
+        }
+      }
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("exp-toast");
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.remove("is-visible");
+      void toast.offsetWidth;
+      toast.classList.add("is-visible");
+      setTimeout(() => {
+        toast.classList.remove("is-visible");
+      }, 2000);
+    }
+
+    /* ========================================================================
+       STAGE & BOSS INTERACTION (個別データの保持と復元)
+       ======================================================================== */
+    function switchStage(stageNum) {
+      document.querySelectorAll(".stage-tab-btn").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.stage === String(stageNum));
+      });
+      document.querySelectorAll(".tab-pane").forEach(pane => {
+        pane.classList.toggle("active", pane.id === `pane-stage-${stageNum}`);
+      });
+
+      const taskBanner = document.getElementById("current-task-text");
+      const tasks = [
+        "【オープニング】まず動画を視聴し、本日のミッション「四天王討伐クエスト」を確認せよ！",
+        "【Stage 1】3つの武器（型）から自分たちに合った調査モデルを選択・記録せよ！",
+        "【Stage 2】四天王を選び、Geminiの呪文で企画の粗を探して固定ルーブリックで判定せよ！",
+        "【Stage 3】10月〜12月のアクションプラン（工程表）を完成させ、軍師クロノスの批評を受けよ！",
+        "【Stage 4】本日の学びと次への一歩を「冒険の書」に刻み、A4レポートPDFを提出せよ！",
+        "【Extra Stage】鍛冶屋の試練！バイブコーディングで自分たち専用の調査ツール（武器）を錬成せよ！"
+      ];
+      if (taskBanner && tasks[stageNum]) {
+        taskBanner.textContent = tasks[stageNum];
+      }
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      playBeep("click");
+    }
+
+    function saveCurrentBossForm() {
+      const form = document.getElementById("judgement-form");
+      if (!form) return;
+      const bossId = lessonState.currentBossId;
+      const formData = new FormData(form);
+      lessonState.bossRecords[bossId] = {
+        evidence: formData.get("evidence") || "",
+        met: formData.get("met") || "",
+        gap: formData.get("gap") || "",
+        next: formData.get("next") || "",
+        status: formData.get("status") || lessonState.bossRecords[bossId]?.status || "before"
+      };
+
+      const promptArea = document.getElementById("spell-prompt-text");
+      if (promptArea && lessonState.customPrompts) {
+        lessonState.customPrompts[bossId] = promptArea.value;
+      }
+
+      saveToStorage();
+    }
+
+    function switchBoss(bossId) {
+      saveCurrentBossForm();
+      lessonState.currentBossId = bossId;
+      const data = bossData[bossId];
+      if (!data) return;
+
+      document.querySelectorAll(".boss-select-card").forEach(c => {
+        c.classList.toggle("active", c.dataset.boss === String(bossId));
+        c.setAttribute("aria-selected", c.dataset.boss === String(bossId) ? "true" : "false");
+      });
+
+      document.getElementById("arena-boss-name").textContent = data.name;
+      document.getElementById("arena-boss-title").textContent = data.name;
+      document.getElementById("arena-boss-catchphrase").textContent = data.catchphrase;
+      document.getElementById("arena-boss-weakness").textContent = data.weakness;
+      document.getElementById("arena-boss-use").setAttribute("href", `#${data.sprite}`);
+
+      const record = lessonState.bossRecords[bossId] || { status: "before" };
+      const presentation = statusPresentation[record.status] || statusPresentation.before;
+      const arenaBadge = document.getElementById("arena-boss-badge");
+      arenaBadge.className = `badge ${presentation.className}`;
+      arenaBadge.textContent = `${presentation.symbol} ${presentation.text}`;
+
+      document.getElementById("spell-title").textContent = data.spellTitle;
+      const promptArea = document.getElementById("spell-prompt-text");
+      if (promptArea) {
+        promptArea.value = (lessonState.customPrompts && lessonState.customPrompts[bossId]) ? lessonState.customPrompts[bossId] : data.spellPrompt;
+      }
+
+      const form = document.getElementById("judgement-form");
+      form.dataset.boss = String(bossId);
+      document.getElementById("form-legend").textContent = `${data.name} の判定記録（固定ルーブリック照合）`;
+
+      const unverifiedOpt = document.getElementById("opt-unverified");
+      if (unverifiedOpt) {
+        unverifiedOpt.style.display = data.allowUnverified ? "inline-flex" : "none";
+      }
+
+      document.getElementById("boss-evidence").value = record.evidence || "";
+      document.getElementById("boss-met").value = record.met || "";
+      document.getElementById("boss-gap").value = record.gap || "";
+      document.getElementById("boss-next").value = record.next || "";
+
+      const radios = form.querySelectorAll('input[name="status"]');
+      radios.forEach(r => {
+        r.checked = (r.value === record.status);
+      });
+
+      playBeep("click");
+    }
+
+    /* ========================================================================
+       ★新機能: 再戦プロンプト & 審判者プロンプトの自動生成
+       ======================================================================== */
+    function generateRechallengePrompt() {
+      const bossId = lessonState.currentBossId;
+      const data = bossData[bossId];
+      const nextPlan = document.getElementById("boss-next")?.value || "（修正内容を入力してください）";
+      const gap = document.getElementById("boss-gap")?.value || "（指摘された課題）";
+
+      return `あなたは「${data.name}」です。
+先ほど指摘された以下の課題について、私たちは企画を修正しました。
+
+【先ほど指摘された課題】：
+${gap}
+
+【私たちが修正した新しい計画・問い】：
+${nextPlan}
+
+【再審査のお願い】：
+この修正によって、あなたの指摘した弱点は克服され、固定ルーブリックをクリア（撃破）できたと言えますか？
+合格であれば【撃破！】と宣言し、まだ足りない点があれば具体的にアドバイスしてください。`;
+    }
+
+    function generateJudgeMasterPrompt() {
+      const studentProfile = document.getElementById("student-profile")?.value || "河瀬高校2年 探究グループ";
+      const weaponSelect = document.getElementById("weapon-selection")?.value || "未選択";
+      let summary = "";
+      for (let i = 1; i <= 4; i++) {
+        const b = bossData[i];
+        const r = lessonState.bossRecords[i] || {};
+        summary += `・${b.name}: [判定: ${statusPresentation[r.status]?.text || "挑戦前"}]\n  修正案: ${r.next || "特になし"}\n`;
+      }
+
+      return `あなたは河瀬高校 総合的な探究の時間を統括する最高審判者「大賢者」です。
+私たちが四天王との対峙を経て改善した「第3サイクル 外部調査企画」の全体を総合審査してください。
+
+【グループ】：${studentProfile}
+【選択した型】：${weaponSelect}
+【四天王との対決・改善履歴】：
+${summary}
+
+【総合審査基準】
+1. 曖昧さ、既知の情報、丸投げ、空論の4大リスクがバランスよく克服されているか？
+2. 12月11日の「一日活動日」に向けて、生徒が自力で確かめられる探究になっているか？
+3. 外部への依頼（11月11日期限）に失礼や無理がないか？
+
+総合判定【太鼓判・合格】または【要再考】を下し、10月からの本格調査に向けた激励と最終アドバイスをください。`;
+    }
+
+    /* ========================================================================
+       PRINT REPORT GENERATOR (A4提出用サマリー自動構築)
+       ======================================================================== */
+    function preparePrintReport() {
+      saveCurrentBossForm();
+
+      const studentProfile = document.getElementById("student-profile")?.value || "（未記入）";
+      document.getElementById("print-report-author").textContent = `提出者: ${studentProfile}`;
+
+      const weaponSelect = document.getElementById("weapon-selection")?.value || "未選択";
+      const weaponMemo = document.getElementById("weapon-selection-memo")?.value || "（未記入）";
+      const extraToolMemo = document.getElementById("extra-tool-memo")?.value || "";
+      document.getElementById("print-weapon-name").textContent = weaponSelect;
+      let fullWeaponMemo = weaponMemo;
+      if (extraToolMemo.trim()) {
+        fullWeaponMemo += `\n【自作ツール(バイブコーディング)構想】: ${extraToolMemo.trim()}`;
+      }
+      document.getElementById("print-weapon-memo").textContent = fullWeaponMemo;
+
+      const bossesContainer = document.getElementById("print-bosses-container");
+      if (bossesContainer) {
+        let html = "";
+        for (let i = 1; i <= 4; i++) {
+          const boss = bossData[i];
+          const rec = lessonState.bossRecords[i] || {};
+          const statusText = statusPresentation[rec.status]?.text || "挑戦前";
+          const statusSymbol = statusPresentation[rec.status]?.symbol || "○";
+
+          html += `
+            <div class="print-boss-block">
+              <div class="print-boss-head">
+                <span>${boss.name}</span>
+                <span style="font-weight: bold;">判定: ${statusSymbol} ${statusText}</span>
+              </div>
+              <div class="print-label">1. 根拠の該当箇所:</div>
+              <div class="print-text">${rec.evidence || "（未記入）"}</div>
+              <div class="print-label">2. 具体的に満たした点:</div>
+              <div class="print-text">${rec.met || "（未記入）"}</div>
+              <div class="print-label">3. 具体的に足りない点:</div>
+              <div class="print-text">${rec.gap || "（未記入）"}</div>
+              <div class="print-label">4. 次に行う修正案:</div>
+              <div class="print-text">${rec.next || "（未記入）"}</div>
+            </div>
+          `;
+        }
+        bossesContainer.innerHTML = html;
+      }
+
+      const scheduleTbody = document.getElementById("print-schedule-tbody");
+      if (scheduleTbody) {
+        let schHtml = "";
+        const terms = [
+          "10月14日（水）",
+          "10月28日（水）",
+          "11月4日〜11日（外部依頼期限）",
+          "11月25日（水）",
+          "12月9日（事前確認）",
+          "12月11日（一日活動日本番）"
+        ];
+        for (let i = 1; i <= 6; i++) {
+          const task = document.getElementById(`sch-task-${i}`)?.value || "";
+          const owner = document.getElementById(`sch-owner-${i}`)?.value || "";
+          const goal = document.getElementById(`sch-goal-${i}`)?.value || "";
+          schHtml += `
+            <tr>
+              <td><strong>${terms[i - 1]}</strong></td>
+              <td>${task || "—"}</td>
+              <td>${owner || "—"}</td>
+              <td>${goal || "—"}</td>
+            </tr>
+          `;
+        }
+        scheduleTbody.innerHTML = schHtml;
+      }
+
+      document.getElementById("print-plan-next").textContent = document.getElementById("plan-next-action")?.value || "—";
+      document.getElementById("print-plan-lit").textContent = document.getElementById("plan-lit-search")?.value || "—";
+      document.getElementById("print-plan-roles").textContent = document.getElementById("plan-roles")?.value || "—";
+      document.getElementById("print-plan-day").textContent = document.getElementById("plan-day-activity")?.value || "—";
+
+      document.getElementById("print-book-q1").textContent = document.getElementById("book-q1")?.value || "（未記入）";
+      document.getElementById("print-book-q2").textContent = document.getElementById("book-q2")?.value || "（未記入）";
+      document.getElementById("print-book-q3").textContent = document.getElementById("book-q3")?.value || "（未記入）";
+    }
+
+    function generateLoiloSummaryText() {
+      saveCurrentBossForm();
+      const studentProfile = document.getElementById("student-profile")?.value || "未記入";
+      const weaponSelect = document.getElementById("weapon-selection")?.value || "未選択";
+      const weaponMemo = document.getElementById("weapon-selection-memo")?.value || "未記入";
+      const extraToolMemo = document.getElementById("extra-tool-memo")?.value || "";
+
+      let text = `【高2ソウタン 外部調査企画レポート（四天王クエスト完遂の書）】\n`;
+      text += `■提出者: ${studentProfile}\n`;
+      text += `■実施日: 2026年9月30日\n\n`;
+
+      text += `========================================\n`;
+      text += `【Stage 1: 選択した武器（型）】\n`;
+      text += `・型: ${weaponSelect}\n`;
+      text += `・選定理由: ${weaponMemo}\n`;
+      if (extraToolMemo.trim()) {
+        text += `・自作ツール(バイブコーディング)構想: ${extraToolMemo.trim()}\n`;
+      }
+      text += `\n`;
+
+      text += `========================================\n`;
+      text += `【Stage 2: 四天王判定記録（固定ルーブリック）】\n`;
+      for (let i = 1; i <= 4; i++) {
+        const boss = bossData[i];
+        const rec = lessonState.bossRecords[i] || {};
+        const st = statusPresentation[rec.status]?.text || "挑戦前";
+        text += `▼ ${boss.name} [判定: ${st}]\n`;
+        text += `  1. 根拠箇所: ${rec.evidence || "未記入"}\n`;
+        text += `  2. 満たした点: ${rec.met || "未記入"}\n`;
+        text += `  3. 足りない点: ${rec.gap || "未記入"}\n`;
+        text += `  4. 次の修正案: ${rec.next || "未記入"}\n\n`;
+      }
+
+      text += `========================================\n`;
+      text += `【Stage 3: 旅の工程表（アクションプラン）】\n`;
+      const terms = [
+        "10月14日", "10月28日", "11月4日〜11日(外部依頼期限)",
+        "11月25日", "12月9日(事前確認)", "12月11日(一日活動日本番)"
+      ];
+      for (let i = 1; i <= 6; i++) {
+        const task = document.getElementById(`sch-task-${i}`)?.value || "—";
+        const owner = document.getElementById(`sch-owner-${i}`)?.value || "—";
+        const goal = document.getElementById(`sch-goal-${i}`)?.value || "—";
+        text += `・${terms[i - 1]}: ${task} (担当: ${owner} / 完了: ${goal})\n`;
+      }
+      text += `\n【行動計画詳細】\n`;
+      text += `・直近の行動: ${document.getElementById("plan-next-action")?.value || "—"}\n`;
+      text += `・事前文献調査: ${document.getElementById("plan-lit-search")?.value || "—"}\n`;
+      text += `・役割分担: ${document.getElementById("plan-roles")?.value || "—"}\n`;
+      text += `・12/11一日活動日予定: ${document.getElementById("plan-day-activity")?.value || "—"}\n\n`;
+
+      text += `========================================\n`;
+      text += `【Stage 4: 冒険の書（振り返り）】\n`;
+      text += `1. 問いや計画の進化:\n${document.getElementById("book-q1")?.value || "未記入"}\n\n`;
+      text += `2. AI活用の省察:\n${document.getElementById("book-q2")?.value || "未記入"}\n\n`;
+      text += `3. 次回への宿題・Next Action:\n${document.getElementById("book-q3")?.value || "未記入"}\n`;
+
+      return text;
+    }
+
+    const DEFAULT_CHRONOS_PROMPT = `あなたは厳しい探究学習の進行アドバイザー「時の軍師クロノス」です。以下の私たちの調査工程表を厳しく点検し、実現可能性を批評してください。
+
+【私たちの工程表】
+・10月中の予定：[Q1・Q2の内容を入力]
+・外部連絡予定日：[11月4日〜11日頃]
+・12月11日（一日活動日）の予定：[Q4の内容を入力]
+・役割分担：[Q3の内容を入力]
+
+【批評基準】
+1. 外部への依頼時期（11月11日厳守）に無理はないか？直前アポになっていないか？
+2. 文献調査を行う時間が十分に確保されているか？
+3. 12月11日の本番調査で、雨天時や相手の都合がつかない場合の「予備計画（プランB）」があるか？
+危険な落とし穴を3点指摘し、より安全で確実な進め方をアドバイスしてください。`;
+
+    const DEFAULT_VIBE_PROMPT = `あなたは高校生の探究学習を支援する優秀なフロントエンドエンジニアです。
+高校生が外部調査・実証実験で実際に使用する、以下の条件のWebツール（HTML1枚完結）を作成してください。
+
+【私たちが作りたいツールのアイデア】
+・ツールの用途: [例: 河瀬駅前で歩行者と自転車の交通量をカウントする計測ツール]
+・主なターゲット: [例: 調査を行う高校生自身（スマートフォンで片手操作）]
+・欲しい機能:
+  1. [例: 画面上の「歩行者」「自転車」「危険ニアミス」ボタンをタップすると数字が+1される]
+  2. [例: 誤タップ防止の「-1（取り消し）」ボタン]
+  3. [例: 計測終了後に「CSV出力」または「テキストコピー」できる機能]
+・デザインの要望: [例: スマホで見やすく、押しやすい大きなボタン]
+
+【技術的要件】
+・外部ライブラリを使わず、単一のHTMLファイル（インラインCSS、JavaScript）のみで完結させてください。
+・スマートフォン（Safari / Chrome）およびiPadで確実にタップして動作するレスポンシブデザインにしてください。
+・高校生がコードをコピーしてブラウザで開くだけで即座に使えるようにしてください。`;
+
+    /* ========================================================================
+       LOCAL STORAGE & RECOVERY
+       ======================================================================== */
+    function saveToStorage() {
+      try {
+        const payload = {
+          bossRecords: lessonState.bossRecords,
+          customPrompts: lessonState.customPrompts,
+          chronosPrompt: document.getElementById("chronos-prompt-text")?.value || "",
+          vibePrompt: document.getElementById("vibe-prompt-text")?.value || "",
+          extraToolMemo: document.getElementById("extra-tool-memo")?.value || "",
+          preparationState: lessonState.preparationState,
+          mp: lessonState.mp,
+          weaponSelect: document.getElementById("weapon-selection")?.value,
+          weaponMemo: document.getElementById("weapon-selection-memo")?.value,
+          studentProfile: document.getElementById("student-profile")?.value,
+          planNext: document.getElementById("plan-next-action")?.value,
+          planLit: document.getElementById("plan-lit-search")?.value,
+          planRoles: document.getElementById("plan-roles")?.value,
+          planDay: document.getElementById("plan-day-activity")?.value,
+          bookQ1: document.getElementById("book-q1")?.value,
+          bookQ2: document.getElementById("book-q2")?.value,
+          bookQ3: document.getElementById("book-q3")?.value
+        };
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      } catch (e) {
+        console.warn("Storage save failed:", e);
+      }
+    }
+
+    function loadFromStorage() {
+      try {
+        // 旧バージョンのキャッシュや誤った撃破データを確実にパージ
+        try {
+          localStorage.removeItem("kawase_sotan_quest_20260930");
+        } catch (_) {}
+
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const data = JSON.parse(raw);
+          if (data.bossRecords) lessonState.bossRecords = data.bossRecords;
+          if (data.customPrompts) lessonState.customPrompts = data.customPrompts;
+          if (data.chronosPrompt && document.getElementById("chronos-prompt-text")) {
+            document.getElementById("chronos-prompt-text").value = data.chronosPrompt;
+          }
+          if (data.vibePrompt && document.getElementById("vibe-prompt-text")) {
+            document.getElementById("vibe-prompt-text").value = data.vibePrompt;
+          }
+          if (data.extraToolMemo && document.getElementById("extra-tool-memo")) {
+            document.getElementById("extra-tool-memo").value = data.extraToolMemo;
+          }
+          if (data.preparationState) lessonState.preparationState = data.preparationState;
+          if (data.mp !== undefined) lessonState.mp = data.mp;
+
+          if (data.weaponSelect && document.getElementById("weapon-selection")) {
+            document.getElementById("weapon-selection").value = data.weaponSelect;
+          }
+          if (data.weaponMemo && document.getElementById("weapon-selection-memo")) {
+            document.getElementById("weapon-selection-memo").value = data.weaponMemo;
+          }
+          if (data.studentProfile && document.getElementById("student-profile")) {
+            document.getElementById("student-profile").value = data.studentProfile;
+          }
+          if (data.planNext && document.getElementById("plan-next-action")) {
+            document.getElementById("plan-next-action").value = data.planNext;
+          }
+          if (data.planLit && document.getElementById("plan-lit-search")) {
+            document.getElementById("plan-lit-search").value = data.planLit;
+          }
+          if (data.planRoles && document.getElementById("plan-roles")) {
+            document.getElementById("plan-roles").value = data.planRoles;
+          }
+          if (data.planDay && document.getElementById("plan-day-activity")) {
+            document.getElementById("plan-day-activity").value = data.planDay;
+          }
+          if (data.bookQ1 && document.getElementById("book-q1")) {
+            document.getElementById("book-q1").value = data.bookQ1;
+          }
+          if (data.bookQ2 && document.getElementById("book-q2")) {
+            document.getElementById("book-q2").value = data.bookQ2;
+          }
+          if (data.bookQ3 && document.getElementById("book-q3")) {
+            document.getElementById("book-q3").value = data.bookQ3;
+          }
+        }
+
+        // 四天王のバッジ・カード状態を確実に初期化または保存データから反映
+        for (let i = 1; i <= 4; i++) {
+          const rec = lessonState.bossRecords[i] || { status: "before" };
+          const badge = document.getElementById(`badge-boss-${i}`);
+          const card = document.getElementById(`boss-card-${i}`);
+          const pres = statusPresentation[rec.status] || statusPresentation.before;
+          if (badge) {
+            badge.className = `badge ${pres.className}`;
+            badge.textContent = `${pres.symbol} ${pres.text}`;
+          }
+          if (card) {
+            card.classList.toggle("is-cleared", rec.status === "clear");
+          }
+        }
+      } catch (e) {
+        console.warn("Storage load failed:", e);
+      }
+    }
+
+    /* ========================================================================
+       MODAL CONTROLLERS
+       ======================================================================== */
+    function openModal(modalId) {
+      const modal = document.getElementById(modalId);
+      if (modal) {
+        modal.classList.add("active");
+        playBeep("open");
+      }
+    }
+    function closeModal() {
+      document.querySelectorAll(".modal-overlay").forEach(m => m.classList.remove("active"));
+      playBeep("close");
+    }
+
+    /* ========================================================================
+       TIMER ENGINE (単一タイマー / 60分で自動Stage3転記案内)
+       ======================================================================== */
+    function startTimer() {
+      if (lessonState.timerId !== null) return;
+      lessonState.timerId = setInterval(() => {
+        lessonState.remainingSeconds = Math.max(0, lessonState.remainingSeconds - 1);
+        renderTime();
+
+        if (lessonState.remainingSeconds <= 30 * 60 && !lessonState.stage3Announced) {
+          lessonState.stage3Announced = true;
+          handle60MinTransition();
+        }
+
+        if (lessonState.remainingSeconds === 0) {
+          clearInterval(lessonState.timerId);
+          lessonState.timerId = null;
+          showToast("90分経過しました！作業内容を保存し、先生の指示に従ってください。");
+        }
+      }, 1000);
+    }
+
+    function handle60MinTransition() {
+      showToast("60分経過！未撃破の王を工程表の最優先タスクに転記し、Stage 3へ進みます。");
+      const unverifiedList = [];
+      for (let i = 1; i <= 4; i++) {
+        if (lessonState.bossRecords[i]?.status !== "clear") {
+          unverifiedList.push(bossData[i].name);
+        }
+      }
+
+      const banner = document.getElementById("unresolved-task-banner");
+      const listSpan = document.getElementById("unresolved-task-list");
+      if (banner && listSpan && unverifiedList.length > 0) {
+        banner.style.display = "block";
+        listSpan.textContent = `未撃破の王（${unverifiedList.join("、 ")}）の改善タスクを最優先に組み込みました。`;
+        const firstTaskInput = document.getElementById("sch-task-1");
+        if (firstTaskInput) {
+          firstTaskInput.value = `【最優先克服】${unverifiedList[0]}の指摘点改善と問いの再設定`;
+        }
+      }
+    }
+
+    /* ========================================================================
+       YOUTUBE GUIDANCE VIDEO EMBED (YouTube 16:9 埋め込み＆クイック反映)
+       ======================================================================== */
+    const YOUTUBE_STORAGE_KEY = "kawase_sotan_quest_youtube_id";
+
+    function extractYouTubeId(urlOrId) {
+      if (!urlOrId) return null;
+      const trimmed = urlOrId.trim();
+      if (/^[a-zA-Z0-9_-]{11}$/.test(trimmed)) return trimmed;
+      const match = trimmed.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+      return match ? match[1] : null;
+    }
+
+    function loadYouTubeVideo(videoInput) {
+      const videoId = extractYouTubeId(videoInput);
+      const iframe = document.getElementById("youtube-iframe");
+      const placeholder = document.getElementById("video-placeholder-view");
+      if (!iframe || !placeholder) return;
+
+      if (videoId) {
+        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?rel=0`;
+        iframe.style.display = "block";
+        placeholder.style.display = "none";
+        try {
+          localStorage.setItem(YOUTUBE_STORAGE_KEY, videoId);
+        } catch (e) {
+          console.warn("localStorage save failed", e);
+        }
+      } else {
+        iframe.src = "";
+        iframe.style.display = "none";
+        placeholder.style.display = "flex";
+      }
+    }
+
+    /* ========================================================================
+       DOM EVENT LISTENERS & INITIALIZATION
+       ======================================================================== */
+    document.addEventListener("DOMContentLoaded", () => {
+      // iPad/ブラウザのAudioContext自動アンロック（初回操作時）
+      const unlockAudio = () => {
+        getAudioContext();
+        window.removeEventListener("touchstart", unlockAudio);
+        window.removeEventListener("click", unlockAudio);
+      };
+      window.addEventListener("touchstart", unlockAudio, { passive: true });
+      window.addEventListener("click", unlockAudio, { passive: true });
+
+      loadFromStorage();
+
+      document.querySelectorAll(".stage-tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => switchStage(Number(btn.dataset.stage)));
+      });
+
+      document.querySelectorAll(".js-next-stage").forEach(btn => {
+        btn.addEventListener("click", () => switchStage(Number(btn.dataset.next)));
+      });
+      document.querySelectorAll(".js-prev-stage").forEach(btn => {
+        btn.addEventListener("click", () => switchStage(Number(btn.dataset.prev)));
+      });
+
+      document.querySelectorAll(".boss-select-card").forEach(card => {
+        card.addEventListener("click", () => switchBoss(Number(card.dataset.boss)));
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            switchBoss(Number(card.dataset.boss));
+          }
+        });
+      });
+
+      const soundBtn = document.getElementById("sound-btn");
+      if (soundBtn) {
+        soundBtn.addEventListener("click", () => {
+          lessonState.soundEnabled = !lessonState.soundEnabled;
+          document.getElementById("sound-icon").textContent = lessonState.soundEnabled ? "🔊" : "🔇";
+          document.getElementById("sound-label").textContent = lessonState.soundEnabled ? "効果音(SE): 入" : "効果音(SE): 切";
+          if (lessonState.soundEnabled) playBeep("click");
+        });
+      }
+
+      document.getElementById("header-pdf-btn")?.addEventListener("click", () => {
+        openModal("modal-pdf-guide");
+      });
+
+      document.getElementById("cmd-fight")?.addEventListener("click", () => {
+        switchStage(2);
+      });
+      document.getElementById("cmd-spell")?.addEventListener("click", () => {
+        openModal("modal-spells");
+      });
+      document.getElementById("cmd-item")?.addEventListener("click", () => {
+        openModal("modal-items");
+      });
+      document.getElementById("cmd-escape")?.addEventListener("click", () => {
+        showToast("にげられない！探究の試練は続く！");
+        playBeep("escape");
+      });
+      document.getElementById("cmd-tactic")?.addEventListener("click", () => {
+        openModal("modal-tactics");
+      });
+
+      document.querySelectorAll(".js-close-modal").forEach(btn => {
+        btn.addEventListener("click", closeModal);
+      });
+      document.querySelectorAll(".modal-overlay").forEach(overlay => {
+        overlay.addEventListener("click", (e) => {
+          if (e.target === overlay) closeModal();
+        });
+      });
+
+      // 呪文コピー (textareaの編集内容を優先取得・MP消費: 魔法SE)
+      document.querySelectorAll(".js-copy-prompt, .js-copy-text").forEach(btn => {
+        btn.addEventListener("click", () => {
+          const promptArea = document.getElementById("spell-prompt-text");
+          const text = promptArea ? promptArea.value : (btn.dataset.text || "");
+          navigator.clipboard.writeText(text).then(() => {
+            showToast("呪文プロンプトをコピーしました！Geminiに唱えてください。");
+            consumeMp();
+          }).catch(() => {
+            playBeep("warning");
+            showToast("コピーに失敗しました。手動で選択してコピーしてください。");
+          });
+        });
+      });
+
+      // ★プロンプト復活ボタン（誤って削除した時に各王の初期ひな形に戻す）
+      document.getElementById("btn-reset-prompt")?.addEventListener("click", () => {
+        const bossId = lessonState.currentBossId;
+        const data = bossData[bossId];
+        if (!data) return;
+        const promptArea = document.getElementById("spell-prompt-text");
+        if (promptArea) {
+          promptArea.value = data.spellPrompt;
+          if (lessonState.customPrompts) {
+            lessonState.customPrompts[bossId] = data.spellPrompt;
+          }
+          saveToStorage();
+          playBeep("magic");
+          showToast(`✨ ${data.name} のプロンプトを初期ひな形に復活させました！`);
+        }
+      });
+
+      // プロンプト編集のリアルタイム同期
+      document.getElementById("spell-prompt-text")?.addEventListener("input", (e) => {
+        const bossId = lessonState.currentBossId;
+        if (lessonState.customPrompts) {
+          lessonState.customPrompts[bossId] = e.target.value;
+        }
+        saveToStorage();
+      });
+
+      // ★新ボタン①: 修正案で四天王に再戦 (MP消費: 魔法SE)
+      document.getElementById("btn-rechallenge-boss")?.addEventListener("click", () => {
+        const nextText = document.getElementById("boss-next")?.value.trim();
+        if (!nextText) {
+          playBeep("warning");
+          alert("「4. 次に行う修正案」に修正内容を書いてから再戦ボタンを押してください！");
+          document.getElementById("boss-next")?.focus();
+          return;
+        }
+        const prompt = generateRechallengePrompt();
+        navigator.clipboard.writeText(prompt).then(() => {
+          showToast("⚔️ 修正案を込めた再戦プロンプトをコピーしました！Geminiに送ってください。");
+          consumeMp();
+        });
+      });
+
+      // ★新ボタン②: 審判者（大賢者）に投げる (神聖召喚SE + MP消費)
+      document.getElementById("btn-ask-judge")?.addEventListener("click", () => {
+        const prompt = generateJudgeMasterPrompt();
+        navigator.clipboard.writeText(prompt).then(() => {
+          showToast("⚖️ 審判者（大賢者）への総合審査プロンプトをコピーしました！Geminiに判定を仰いでください。");
+          playBeep("judge");
+          setTimeout(() => {
+            consumeMp();
+          }, 350);
+        });
+      });
+
+      // ★新ボタン③: 軍師クロノスの批評プロンプトコピー (MP消費: 魔法SE)
+      document.getElementById("btn-copy-chronos")?.addEventListener("click", () => {
+        const promptArea = document.getElementById("chronos-prompt-text");
+        const text = promptArea ? promptArea.value : "";
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("🧙‍♂️ 軍師クロノスの批評プロンプトをコピーしました！Geminiに投げてみよう。");
+          consumeMp();
+        }).catch(() => {
+          playBeep("warning");
+          showToast("コピーに失敗しました。");
+        });
+      });
+
+      // ★軍師クロノスのプロンプト復活ボタン
+      document.getElementById("btn-reset-chronos")?.addEventListener("click", () => {
+        const promptArea = document.getElementById("chronos-prompt-text");
+        if (promptArea) {
+          promptArea.value = DEFAULT_CHRONOS_PROMPT;
+          saveToStorage();
+          playBeep("magic");
+          showToast("✨ 軍師クロノスのプロンプトを初期ひな形に復活させました！");
+        }
+      });
+
+      // ★Extra Stage: 汎用ステージ遷移ボタン (.js-goto-stage)
+      document.querySelectorAll(".js-goto-stage").forEach(btn => {
+        btn.addEventListener("click", () => {
+          switchStage(Number(btn.dataset.stage));
+        });
+      });
+
+      // ★Extra Stage: 自作武器錬成プロンプトコピー (MP消費: 魔法SE)
+      document.getElementById("btn-copy-vibe")?.addEventListener("click", () => {
+        const promptArea = document.getElementById("vibe-prompt-text");
+        const text = promptArea ? promptArea.value : "";
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("⚔️ 自作武器の錬成プロンプトをコピーしました！Geminiに唱えよう。");
+          consumeMp();
+        }).catch(() => {
+          playBeep("warning");
+          showToast("コピーに失敗しました。");
+        });
+      });
+
+      // ★Extra Stage: 錬成プロンプト復活ボタン
+      document.getElementById("btn-reset-vibe")?.addEventListener("click", () => {
+        const promptArea = document.getElementById("vibe-prompt-text");
+        if (promptArea) {
+          promptArea.value = DEFAULT_VIBE_PROMPT;
+          saveToStorage();
+          playBeep("magic");
+          showToast("✨ 錬成プロンプトを初期ひな形に復活させました！");
+        }
+      });
+
+      // 異議申立てコピーボタン (反論: こうげきSE ザシュッ！)
+      document.querySelectorAll(".js-copy-appeal").forEach(btn => {
+        btn.addEventListener("click", () => {
+          navigator.clipboard.writeText(appealTemplate).then(() => {
+            showToast("📜 異議申立てテンプレートをコピーしました！Geminiへ反論してください。");
+            playBeep("attack");
+          }).catch(() => {
+            playBeep("warning");
+            showToast("コピーに失敗しました。");
+          });
+        });
+      });
+
+      // ルーブリック判定セーブ (+1 EXP: レベルアップSE / 修正セーブ: セーブSE)
+      const judgementForm = document.getElementById("judgement-form");
+      if (judgementForm) {
+        judgementForm.addEventListener("submit", (e) => {
+          e.preventDefault();
+          const bossId = Number(judgementForm.dataset.boss);
+          const formData = new FormData(judgementForm);
+          const status = formData.get("status");
+
+          if (!status) {
+            playBeep("warning");
+            alert("判定状態（撃破 / 再挑戦 / 資料未確認）を選択してください。");
+            return;
+          }
+
+          lessonState.bossRecords[bossId] = {
+            evidence: formData.get("evidence") || "",
+            met: formData.get("met") || "",
+            gap: formData.get("gap") || "",
+            next: formData.get("next") || "",
+            status: status
+          };
+
+          if (status === "clear") {
+            lessonState.preparationState[`boss${bossId}`] = true;
+            playBeep("levelup");
+            showToast(`★ ${bossData[bossId].name} を撃破した！記録をセーブ！ (+1 EXP)`);
+          } else {
+            lessonState.preparationState[`boss${bossId}`] = false;
+            playBeep("save");
+            showToast(`${bossData[bossId].name} の判定を「${statusPresentation[status].text}」としてセーブしました。`);
+          }
+
+          const card = document.getElementById(`boss-card-${bossId}`);
+          const badge = document.getElementById(`badge-boss-${bossId}`);
+          const arenaBadge = document.getElementById(`arena-boss-badge`);
+          const pres = statusPresentation[status];
+
+          if (badge) {
+            badge.className = `badge ${pres.className}`;
+            badge.textContent = `${pres.symbol} ${pres.text}`;
+          }
+          if (arenaBadge) {
+            arenaBadge.className = `badge ${pres.className}`;
+            arenaBadge.textContent = `${pres.symbol} ${pres.text}`;
+          }
+          if (card) {
+            card.classList.toggle("is-cleared", status === "clear");
+          }
+
+          updateProgress();
+        });
+      }
+
+      // 工程表保存ボタン (+1 EXP: レベルアップSE)
+      document.getElementById("btn-save-schedule")?.addEventListener("click", () => {
+        lessonState.preparationState.schedule = true;
+        updateProgress();
+        playBeep("levelup");
+        showToast("工程表のアクションプランを記録しました！ (+1 EXP)");
+      });
+
+      // 冒険の書保存フォーム (+1 EXP: レベルアップSE)
+      document.getElementById("adventure-book-form")?.addEventListener("submit", (e) => {
+        e.preventDefault();
+        lessonState.preparationState.book = true;
+        updateProgress();
+        playBeep("levelup");
+        showToast("冒険の書を記録しました！全工程コンプリート！ (+1 EXP)");
+      });
+
+      // 印刷ボタン（iPad用モーダル起動）
+      document.getElementById("btn-print-summary")?.addEventListener("click", () => {
+        openModal("modal-pdf-guide");
+      });
+
+      document.getElementById("btn-modal-trigger-print")?.addEventListener("click", () => {
+        closeModal();
+        preparePrintReport();
+        setTimeout(() => {
+          window.print();
+        }, 300);
+      });
+
+      const copyAllBtn = document.getElementById("btn-copy-all-loilo");
+      const modalCopyBtn = document.getElementById("btn-modal-copy-text");
+      const handleCopyAll = () => {
+        const text = generateLoiloSummaryText();
+        navigator.clipboard.writeText(text).then(() => {
+          showToast("全記録をロイロ提出用テキストとしてコピーしました！");
+          playBeep("click");
+        }).catch(() => {
+          showToast("コピーに失敗しました。");
+        });
+      };
+      if (copyAllBtn) copyAllBtn.addEventListener("click", handleCopyAll);
+      if (modalCopyBtn) modalCopyBtn.addEventListener("click", handleCopyAll);
+
+      window.addEventListener("beforeprint", () => {
+        preparePrintReport();
+      });
+
+      document.querySelectorAll("input, textarea, select").forEach(el => {
+        el.addEventListener("input", saveToStorage);
+      });
+
+      startTimer();
+      renderTime();
+      renderMp();
+      updateProgress();
+
+      switchBoss(1);
+
+      // ★YouTube動画埋め込みの初期化と反映リスナー
+      try {
+        const savedYt = localStorage.getItem(YOUTUBE_STORAGE_KEY);
+        if (savedYt) {
+          const inputEl = document.getElementById("input-youtube-id");
+          if (inputEl) inputEl.value = savedYt;
+          loadYouTubeVideo(savedYt);
+        }
+      } catch (e) {
+        console.warn("Failed to load saved YouTube ID", e);
+      }
+
+      document.getElementById("btn-apply-youtube")?.addEventListener("click", () => {
+        const inputVal = document.getElementById("input-youtube-id")?.value;
+        if (inputVal && inputVal.trim()) {
+          loadYouTubeVideo(inputVal);
+          playBeep("levelup");
+          showToast("🎬 YouTube動画を埋め込みました！");
+        } else {
+          showToast("⚠️ YouTubeの動画IDまたはURLを入力してください");
+        }
+      });
+    });
+  </script>
+</body>
+</html>
